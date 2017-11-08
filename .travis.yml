@@ -1,0 +1,8 @@
+language: go
+sudo: no
+
+install:
+  make
+
+script:
+  make test

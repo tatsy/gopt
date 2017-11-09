@@ -1,7 +1,7 @@
 package core
 
 type Shape interface {
-    Intersect(ray Ray, isect *Intersection) bool
+    Intersect(ray *Ray, isect *Intersection) bool
     Bounds() Bounds3d
 }
 
@@ -13,7 +13,7 @@ type Bsdf interface {
 
 type Sensor interface {
     Film() Film
-    SpawnRay(x, y int) Ray
+    SpawnRay(x, y int) *Ray
 }
 
 type Sampler interface {

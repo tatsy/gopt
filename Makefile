@@ -3,10 +3,10 @@ all:
 	go build ./...
 
 run:
-	go run src/main.go
+	go build ./src/main.go && ./main
 
 test:
-	go test ./... -v --count 10 --cover
+	go test ./... --cover
 
 clean:
 	rm -rf main *.jpg *.png

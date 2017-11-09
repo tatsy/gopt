@@ -10,8 +10,8 @@ type Ray struct {
     MaxDist Float
 }
 
-func NewRay(org Vector3d, dir Vector3d) Ray {
-    return Ray{
+func NewRay(org Vector3d, dir Vector3d) *Ray {
+    return &Ray{
         Org: org,
         Dir: dir,
         MaxDist: Infinity,

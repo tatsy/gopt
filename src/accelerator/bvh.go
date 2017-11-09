@@ -63,9 +63,10 @@ type Bvh struct {
     root *BvhNode
 }
 
-func NewBvh(primitives []Primitive) (bvh Bvh) {
+func NewBvh(primitives []Primitive) (bvh *Bvh) {
+    bvh = &Bvh{}
     bvh.primitives = primitives
-    bvh.root = NewBvhSub(&bvh, primitives, 0)
+    bvh.root = NewBvhSub(bvh, primitives, 0)
     return
 }
 
@@ -88,11 +89,11 @@ func NewBvhSub(bvh *Bvh, primitives []Primitive, axis int) *BvhNode {
     sort.Sort(axisSorter)
 
     newPrimitives := make([]Primitive, len(primitives))
-    for i := range axisSorter.Items {
-        newPrimitives[i] = primitives[axisSorter.Items[i].i]
+    for i := range items {
+        newPrimitives[i] = primitives[items[i].i]
     }
 
-    iHalf := len(primitives) / 2
+    iHalf := len(newPrimitives) / 2
     leftNode := NewBvhSub(bvh, newPrimitives[:iHalf], (axis + 1) % 3)
     rightNode := NewBvhSub(bvh, newPrimitives[iHalf:], (axis + 1) % 3)
 
@@ -101,32 +102,38 @@ func NewBvhSub(bvh *Bvh, primitives []Primitive, axis int) *BvhNode {
     return node
 }
 
-func (bvh *Bvh) Intersect(r Ray, isect *Intersection) bool {
-    return IntersectSub(bvh.root, &r, isect)
-}
+func (bvh *Bvh) Intersect(r *Ray, isect *Intersection) bool {
+    stack := make([]*BvhNode, 40)
+    pos := 0
+    stack[pos] = bvh.root
 
-func IntersectSub(node *BvhNode, r *Ray, isect *Intersection) bool {
     ret := false
+    for pos >= 0 {
+        // Pop stack
+        node := stack[pos]
+        pos -= 1
 
-    // Leaf node
-    if node.IsLeaf() {
-        var temp Intersection
-        if node.shape.Intersect(*r, &temp) {
-            ret = true
-            *isect = temp
-            r.MaxDist = temp.HitDist
-        }
-        return ret
-    }
-
-    // Fork node
-    var tMin, tMax Float
-    if node.bbox.Intersect(*r, &tMin, &tMax) {
-        if node.left != nil {
-            ret = ret || IntersectSub(node.left, r, isect)
-        }
-        if node.right != nil {
-            ret = ret || IntersectSub(node.right, r, isect)
+        if node.IsLeaf() {
+            // Leaf node
+            var temp Intersection
+            if node.shape.Intersect(r, &temp) {
+                ret = true
+                *isect = temp
+                r.MaxDist = temp.HitDist
+            }
+        } else {
+            // Fork node
+            var tMin, tMax Float
+            if node.bbox.Intersect(r, &tMin, &tMax) {
+                if node.left != nil {
+                    pos += 1
+                    stack[pos] = node.left
+                }
+                if node.right != nil {
+                    pos += 1
+                    stack[pos] = node.right
+                }
+            }
         }
     }
     return ret

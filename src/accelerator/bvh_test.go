@@ -42,7 +42,7 @@ func TestBvhIntersection(t *testing.T) {
     }
     bvh := NewBvh(prims)
 
-    numTrials := 100
+    numTrials := 1000
     for trial := 0; trial < numTrials; trial++ {
         org := Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}
         org = org.Scale(2.0)

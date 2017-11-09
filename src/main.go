@@ -9,6 +9,10 @@ import (
     . "sensor"
     . "sampler"
     . "integrator"
+    "os"
+    "log"
+    "os/signal"
+    "runtime/pprof"
 )
 
 const (
@@ -16,6 +20,24 @@ const (
 )
 
 func main() {
+    cpuprofile := "mycpu.prof"
+    f, err := os.Create(cpuprofile)
+    if err != nil {
+       log.Fatal(err)
+    }
+    pprof.StartCPUProfile(f)
+    defer pprof.StopCPUProfile()
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    go func() {
+       for sig := range c {
+           log.Printf("captured %v, stopping profiler and exiting...", sig)
+           pprof.StopCPUProfile()
+           os.Exit(1)
+        }
+    }()
+
+
     triMesh := TriMesh{}
     success := triMesh.Load(fileName)
     if !success {

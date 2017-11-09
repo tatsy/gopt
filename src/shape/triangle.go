@@ -10,7 +10,7 @@ type Triangle struct {
     Normals [3]Vector3d
 }
 
-func (t *Triangle) Intersect(ray Ray, isect *Intersection) bool {
+func (t *Triangle) Intersect(ray *Ray, isect *Intersection) bool {
     e1 := t.Points[1].Subtract(t.Points[0]);
     e2 := t.Points[2].Subtract(t.Points[0]);
     pVec := ray.Dir.Cross(e2)

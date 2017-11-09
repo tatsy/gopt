@@ -1,7 +1,6 @@
 package core
 
 import (
-    "fmt"
     "testing"
 )
 
@@ -40,7 +39,6 @@ func TestBounds3dIntersect(t *testing.T) {
         Vector3d{1.5, 0.5, 0.5},
         Vector3d{-1.0, 0.0, 0.0},
     )
-    fmt.Println(r)
 
     var tMin, tMax Float
     if !b1.Intersect(r, &tMin, &tMax) {

@@ -1,6 +1,7 @@
 package integrator
 
 import (
+    "fmt"
     . "core"
     . "accelerator"
 )
@@ -8,7 +9,7 @@ import (
 type PathIntegrator struct {
 }
 
-func (integrator *PathIntegrator) Render(bvh Bvh, sensor Sensor, sampler Sampler) {
+func (integrator *PathIntegrator) Render(bvh *Bvh, sensor Sensor, sampler Sampler) {
     width := sensor.Film().Width
     height := sensor.Film().Height
     film := sensor.Film()
@@ -20,10 +21,11 @@ func (integrator *PathIntegrator) Render(bvh Bvh, sensor Sensor, sampler Sampler
         }
         ProgressBar(y + 1, height)
     }
+    fmt.Println()
     film.Save("image.jpg")
 }
 
-func (integrator *PathIntegrator) Li(bvh Bvh, ray Ray, sampler Sampler) Color {
+func (integrator *PathIntegrator) Li(bvh *Bvh, ray *Ray, sampler Sampler) Color {
     var isect Intersection
     if bvh.Intersect(ray, &isect) {
         return Color{1.0, 1.0, 0.0}

@@ -40,7 +40,7 @@ func (sensor *PerspectiveSensor) Film() Film {
     return sensor.film
 }
 
-func (sensor *PerspectiveSensor) SpawnRay(x, y int) Ray {
+func (sensor *PerspectiveSensor) SpawnRay(x, y int) *Ray {
     width := sensor.film.Width
     height := sensor.film.Height
 

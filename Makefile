@@ -6,3 +6,6 @@ run:
 
 test:
 	go test ./src/... --count 10 --cover
+
+clean:
+	rm -rf main image.jpg

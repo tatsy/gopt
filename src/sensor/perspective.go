@@ -19,11 +19,14 @@ func NewPerspectiveSensor(
     aspect Float,
     nearClip Float,
     farClip Float,
-    film Film) (sensor PerspectiveSensor) {
-    to := target.Subtract(center)
+    film Film) (sensor *PerspectiveSensor) {
+    sensor = &PerspectiveSensor{}
     sensor.center = center
-    sensor.unitU = to.Cross(up).Normalized()
-    sensor.unitV = to.Cross(sensor.unitU).Normalized()
+    to := target.Subtract(center)
+    sensor.unitU = to.Cross(up)
+    sensor.unitU = sensor.unitU.Normalized()
+    sensor.unitV = to.Cross(sensor.unitU)
+    sensor.unitV = sensor.unitV.Normalized()
     sensor.unitW = to.Normalized()
     sensor.fov = fov
     sensor.aspect = aspect
@@ -33,11 +36,11 @@ func NewPerspectiveSensor(
     return
 }
 
-func (sensor PerspectiveSensor) Film() Film {
+func (sensor *PerspectiveSensor) Film() Film {
     return sensor.film
 }
 
-func (sensor PerspectiveSensor) SpawnRay(x, y int) Ray {
+func (sensor *PerspectiveSensor) SpawnRay(x, y int) Ray {
     width := sensor.film.Width
     height := sensor.film.Height
 
@@ -50,6 +53,9 @@ func (sensor PerspectiveSensor) SpawnRay(x, y int) Ray {
     targetX := u * screenWidth
     targetY := v * screenHeight
     targetZ := sensor.nearClip
-    direction := sensor.unitU.Scale(targetX).Add(sensor.unitV.Scale(targetY)).Add(sensor.unitW.Scale(targetZ)).Normalized()
+    direction := sensor.unitU.Scale(targetX)
+    direction = direction.Add(sensor.unitV.Scale(targetY))
+    direction = direction.Add(sensor.unitW.Scale(targetZ))
+    direction = direction.Normalized()
     return NewRay(sensor.center, direction)
 }

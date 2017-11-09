@@ -10,7 +10,7 @@ type Triangle struct {
     Normals [3]Vector3d
 }
 
-func (t Triangle) Intersect(ray Ray, isect *Intersection) bool {
+func (t *Triangle) Intersect(ray Ray, isect *Intersection) bool {
     e1 := t.Points[1].Subtract(t.Points[0]);
     e2 := t.Points[2].Subtract(t.Points[0]);
     pVec := ray.Dir.Cross(e2)
@@ -38,7 +38,9 @@ func (t Triangle) Intersect(ray Ray, isect *Intersection) bool {
     }
 
     pos := ray.Org.Add(ray.Dir.Scale(tHit))
-    nrm := t.Normals[0].Scale(1.0 - u - v).Add(t.Normals[1].Scale(u)).Add(t.Normals[2].Scale(v))
+    nrm := t.Normals[0].Scale(1.0 - u - v)
+    nrm = nrm.Add(t.Normals[1].Scale(u))
+    nrm = nrm.Add(t.Normals[2].Scale(v))
     //Point2d uv = (1.0 - u - v) * uvs_[0] + u * uvs_[1] + v * uvs_[2];
 
     *isect = Intersection{
@@ -49,7 +51,7 @@ func (t Triangle) Intersect(ray Ray, isect *Intersection) bool {
     return true
 }
 
-func (t Triangle) Bounds() Bounds3d {
+func (t *Triangle) Bounds() Bounds3d {
     b := NewBounds3d()
     b.MinPos.X = math.Min(t.Points[0].X, math.Min(t.Points[1].X, t.Points[2].X))
     b.MinPos.X = math.Min(t.Points[0].Y, math.Min(t.Points[1].Y, t.Points[2].Y))

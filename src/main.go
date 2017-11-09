@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     . "./core"
+    . "./accelerator"
     . "./bsdf"
     . "./shape"
     . "./sensor"
@@ -11,7 +12,7 @@ import (
 )
 
 const (
-    fileName = "data/cube.obj"
+    fileName = "data/gopher.obj"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 
     bsdf := LambertBsdf{Color{1.0, 1.0, 1.0}}
     for i := range triMesh.Triangles {
-        primitives[i] = NewPrimitive(triMesh.Triangles[i], bsdf)
+        primitives[i] = NewPrimitive(&triMesh.Triangles[i], &bsdf)
     }
     bvh := NewBvh(primitives)
 
@@ -43,7 +44,7 @@ func main() {
         film,
     )
 
-    sampler := IndependentSampler{}
+    sampler := &IndependentSampler{}
     integrator := PathIntegrator{}
     integrator.Render(bvh, sensor, sampler)
 }

@@ -2,7 +2,6 @@ package shape
 
 import (
     "os"
-    // "io"
     "log"
     "fmt"
     "bufio"
@@ -13,6 +12,15 @@ import (
 
 type TriMesh struct {
     Triangles []Triangle
+}
+
+func NewTriMeshFromFile(filename string) (triMesh TriMesh) {
+    triMesh.Load(filename)
+    return
+}
+
+func (triMesh *TriMesh) NumFaces() int {
+    return len(triMesh.Triangles)
 }
 
 func (triMesh *TriMesh) Load(filename string) bool {

@@ -1,5 +1,10 @@
 package core
 
+import (
+    "fmt"
+    "strings"
+)
+
 type Float = float64
 
 const (
@@ -12,4 +17,17 @@ func Sign(x Float) Float {
         return -1.0
     }
     return 1.0
+}
+
+func ProgressBar(x, maxVal int) {
+    width := 50
+    ratio := float64(x) / float64(maxVal)
+    percent := 100.0 * ratio
+
+    barLen := int(float64(width) * ratio)
+    bar := []rune(strings.Repeat("=", barLen) + strings.Repeat(" ", width - barLen))
+    if barLen < width {
+        bar[barLen] = '>'
+    }
+    fmt.Printf("\r[ %6.2f %% ] [ %s ]", percent, string(bar))
 }

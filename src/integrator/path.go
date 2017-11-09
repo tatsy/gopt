@@ -2,25 +2,28 @@ package integrator
 
 import (
     . "../core"
+    . "../accelerator"
 )
 
 type PathIntegrator struct {
 }
 
-func (integrator PathIntegrator) Render(bvh Bvh, sensor Sensor, sampler Sampler) {
+func (integrator *PathIntegrator) Render(bvh Bvh, sensor Sensor, sampler Sampler) {
     width := sensor.Film().Width
     height := sensor.Film().Height
+    film := sensor.Film()
     for y := 0; y < height; y++ {
         for x := 0; x < width; x++ {
             ray := sensor.SpawnRay(x, y)
             L := integrator.Li(bvh, ray, sampler)
-            sensor.Film().Update(x, y, L)
+            film.Update(x, y, L)
         }
+        ProgressBar(y + 1, height)
     }
-    sensor.Film().Save("image.jpg")
+    film.Save("image.jpg")
 }
 
-func (integrator PathIntegrator) Li(bvh Bvh, ray Ray, sampler Sampler) Color {
+func (integrator *PathIntegrator) Li(bvh Bvh, ray Ray, sampler Sampler) Color {
     var isect Intersection
     if bvh.Intersect(ray, &isect) {
         return Color{1.0, 1.0, 0.0}

@@ -24,15 +24,15 @@ func NewFilm(width, height int) (film Film) {
     return
 }
 
-func (film Film) Aspect() Float {
+func (film *Film) Aspect() Float {
     return Float(film.Width) / Float(film.Height)
 }
 
-func (film Film) Update(x, y int, color Color) {
+func (film *Film) Update(x, y int, color Color) {
     film.data[y * film.Width + x] = color
 }
 
-func (film Film) Save(filename string) {
+func (film *Film) Save(filename string) {
     file, err := os.Create(filename)
     defer file.Close()
     if err != nil {

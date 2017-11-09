@@ -18,7 +18,7 @@ func NewRay(org Vector3d, dir Vector3d) Ray {
     }
 }
 
-func (r Ray) InvDir() (d Vector3d) {
+func (r *Ray) InvDir() (d Vector3d) {
     if (math.Abs(r.Dir.X) > Eps) {
         d.X = 1.0 / r.Dir.X
     } else {

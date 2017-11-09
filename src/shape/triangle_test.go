@@ -5,7 +5,7 @@ import (
     . "../core"
 )
 
-func TestIntersect(t *testing.T) {
+func TestTriangleIntersect(t *testing.T) {
     tri := Triangle{
         Points: [3]Vector3d{
             Vector3d{0.0, 0.0, 0.0},

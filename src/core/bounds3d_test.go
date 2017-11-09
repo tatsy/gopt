@@ -31,7 +31,7 @@ func TestMerge(t *testing.T) {
     }
 }
 
-func TestIntersect(t *testing.T) {
+func TestBounds3dIntersect(t *testing.T) {
     b1 := Bounds3d{
         MinPos: Vector3d{0.0, 0.0, 0.0},
         MaxPos: Vector3d{1.0, 1.0, 1.0},

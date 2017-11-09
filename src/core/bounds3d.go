@@ -1,7 +1,6 @@
 package core
 
 import (
-    "fmt"
     "math"
 )
 
@@ -21,14 +20,15 @@ func (b1 *Bounds3d) Merge(b2 Bounds3d) {
     return
 }
 
-func (b Bounds3d) Center() Vector3d {
-    return b.MinPos.Add(b.MaxPos).Scale(0.5)
+func (b *Bounds3d) Center() (c Vector3d) {
+    c = b.MinPos.Add(b.MaxPos)
+    c = c.Scale(0.5)
+    return
 }
 
-func (b Bounds3d) Intersect(ray Ray, tNear *Float, tFar *Float) bool {
+func (b *Bounds3d) Intersect(ray Ray, tNear *Float, tFar *Float) bool {
     t0 := 0.0
     t1 := ray.MaxDist
-    fmt.Println(t0, t1)
     invDir := ray.InvDir()
     for i := 0; i < 3; i++ {
         tt0 := (b.MinPos.NthElement(i) - ray.Org.NthElement(i)) * invDir.NthElement(i)
@@ -37,15 +37,12 @@ func (b Bounds3d) Intersect(ray Ray, tNear *Float, tFar *Float) bool {
             tt0, tt1 = tt1, tt0
         }
 
-        fmt.Println("c", tt0, tt1)
         t0 = math.Max(t0, tt0)
         t1 = math.Min(t1, tt1)
-        fmt.Println("z", t0, t1)
         if t0 > t1 {
             return false
         }
     }
-    fmt.Println(t0, t1)
 
     *tNear = t0;
     *tFar  = t1;

@@ -5,9 +5,9 @@ import (
     "math"
     "math/rand"
     "testing"
-    . "../core"
-    . "../shape"
-    . "../bsdf"
+    . "core"
+    . "shape"
+    . "bsdf"
 )
 
 func TestAxisSorter(t *testing.T) {

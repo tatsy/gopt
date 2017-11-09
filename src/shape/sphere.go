@@ -1,7 +1,7 @@
 package shape
 
 import (
-    . "../core"
+    . "core"
 )
 
 type Sphere struct {

@@ -2,7 +2,7 @@ package shape
 
 import (
     "testing"
-    . "../core"
+    . "core"
 )
 
 func TestTriangleIntersect(t *testing.T) {

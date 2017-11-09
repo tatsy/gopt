@@ -1,11 +1,12 @@
 all:
-	go build src/main.go
+	export GOPATH=`pwd`
+	go build ./...
 
 run:
 	go run src/main.go
 
 test:
-	go test ./src/... --count 10 --cover
+	go test ./... -v --count 10 --cover
 
 clean:
-	rm -rf main image.jpg
+	rm -rf main *.jpg *.png

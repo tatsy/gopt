@@ -7,7 +7,7 @@ import (
     "bufio"
     "strings"
     "strconv"
-    . "../core"
+    . "core"
 )
 
 type TriMesh struct {

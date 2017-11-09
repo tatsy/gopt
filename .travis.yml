@@ -1,8 +1,25 @@
 language: go
 sudo: no
+go:
+  - 1.9
+
+go_import_path:
+  - "github.com/tatsy/gopt"
 
 install:
   make
 
 script:
   make test
+
+branches:
+  only:
+    - master
+    - development
+    - "/v?[0-9\\.]+/"
+
+notifications:
+  email:
+    recipients: tatsy.mail@gmail.com
+    on_success: change
+    on_failure: always

@@ -11,12 +11,13 @@ import (
 )
 
 type TriMesh struct {
-    Triangles []Triangle
+    Triangles []*Triangle
 }
 
-func NewTriMeshFromFile(filename string) (triMesh TriMesh) {
+func NewTriMeshFromFile(filename string) *TriMesh {
+    triMesh := &TriMesh{}
     triMesh.Load(filename)
-    return
+    return triMesh
 }
 
 func (triMesh *TriMesh) NumFaces() int {
@@ -35,9 +36,9 @@ func (triMesh *TriMesh) Load(filename string) bool {
     scanner := bufio.NewScanner(handler)
 
     // Read file content
-    var positions []Vector3d
-    var normals []Vector3d
-    var triangles []Triangle
+    var positions []*Vector3d
+    var normals []*Vector3d
+    var triangles []*Triangle
     for scanner.Scan() {
         line := scanner.Text()
 
@@ -63,13 +64,13 @@ func (triMesh *TriMesh) Load(filename string) bool {
             x, _ := strconv.ParseFloat(items[1], 64)
             y, _ := strconv.ParseFloat(items[2], 64)
             z, _ := strconv.ParseFloat(items[3], 64)
-            positions = append(positions, Vector3d{x, y, z})
+            positions = append(positions, NewVector3d(x, y, z))
 
         case "vn":
             nx, _ := strconv.ParseFloat(items[1], 64)
             ny, _ := strconv.ParseFloat(items[2], 64)
             nz, _ := strconv.ParseFloat(items[3], 64)
-            normals = append(normals, Vector3d{nx, ny, nz})
+            normals = append(normals, NewVector3d(nx, ny, nz))
 
         case "vt":
             continue
@@ -79,10 +80,10 @@ func (triMesh *TriMesh) Load(filename string) bool {
             fmt.Sscanf(items[1], "%d//%d", &i, &ni)
             fmt.Sscanf(items[2], "%d//%d", &j, &nj)
             fmt.Sscanf(items[3], "%d//%d", &k, &nk)
-            triangles = append(triangles, Triangle{
-                [3]Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
-                [3]Vector3d{normals[ni - 1], normals[nj - 1], normals[nk - 1]},
-            })
+            triangles = append(triangles, NewTriangle(
+                [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
+                [3]*Vector3d{normals[ni - 1], normals[nj - 1], normals[nk - 1]},
+            ))
 
         case "mtllib":
             continue

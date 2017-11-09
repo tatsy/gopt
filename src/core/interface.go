@@ -1,8 +1,13 @@
 package core
 
+type Accelerator interface {
+    Intersect(ray *Ray, isect *Intersection) bool
+}
+
 type Shape interface {
     Intersect(ray *Ray, isect *Intersection) bool
-    Bounds() Bounds3d
+    SampleP(u Point2d, pos *Vector3d, normal *Vector3d)
+    Bounds() *Bounds3d
 }
 
 type Bsdf interface {
@@ -10,12 +15,16 @@ type Bsdf interface {
     Sample(wo Vector3d, sampler Sampler) Vector3d
 }
 
-
 type Sensor interface {
-    Film() Film
+    Film() *Film
     SpawnRay(x, y int) *Ray
 }
 
 type Sampler interface {
-    Get() Float
+    Get1D() Float
+    Get2D() Point2d
+}
+
+type Light interface {
+    Le(ray *Ray) *Color
 }

@@ -11,24 +11,25 @@ import (
 
 type Film struct {
     Width, Height int
-    data []Color
+    data []*Color
 }
 
-func NewFilm(width, height int) (film Film) {
+func NewFilm(width, height int) *Film {
+    film := &Film{}
     film.Width = width
     film.Height = height
-    film.data = make([]Color, width * height)
+    film.data = make([]*Color, width * height)
     for i := 0; i < width * height; i++ {
-        film.data[i] = Color{0.0, 0.0, 0.0}
+        film.data[i] = NewColor(0.0, 0.0, 0.0)
     }
-    return
+    return film
 }
 
 func (film *Film) Aspect() Float {
     return Float(film.Width) / Float(film.Height)
 }
 
-func (film *Film) Update(x, y int, color Color) {
+func (film *Film) Update(x, y int, color *Color) {
     film.data[y * film.Width + x] = color
 }
 

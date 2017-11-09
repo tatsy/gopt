@@ -11,14 +11,14 @@ import (
 )
 
 func TestAxisSorter(t *testing.T) {
-    items := make([]SortItem, 100)
+    items := make([]*SortItem, 100)
     for i := range items {
-        v := Vector3d{
+        v := NewVector3d(
             rand.Float64(),
             rand.Float64(),
             rand.Float64(),
-        }
-        items[i] = SortItem{v, i}
+        )
+        items[i] = &SortItem{v, i}
     }
 
     k := rand.Intn(3)
@@ -35,24 +35,29 @@ func TestAxisSorter(t *testing.T) {
 
 func TestBvhIntersection(t *testing.T) {
     triMesh := NewTriMeshFromFile("../../data/cube.obj")
-    prims := make([]Primitive, triMesh.NumFaces())
-    bsdf := LambertBsdf{}
+    prims := make([]*Primitive, triMesh.NumFaces())
+    bsdf := &LambertBsdf{}
     for i := range triMesh.Triangles {
-        prims[i] = NewPrimitive(&triMesh.Triangles[i], &bsdf)
+        prims[i] = NewPrimitive(triMesh.Triangles[i], bsdf)
     }
     bvh := NewBvh(prims)
 
-    numTrials := 1000
+    numTrials := 100
     for trial := 0; trial < numTrials; trial++ {
-        org := Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}
-        org = org.Scale(2.0)
-        dir := Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}
-        dir = dir.Scale(2.0)
+        org := NewVector3d(
+            rand.Float64(),
+            rand.Float64(),
+            rand.Float64()).Scale(2.0)
+        dir := NewVector3d(
+            rand.Float64(),
+            rand.Float64(),
+            rand.Float64()).Scale(2.0)
         ray := NewRay(org, dir)
 
         var isect Intersection
         actual := bvh.Intersect(ray, &isect)
         actualDist := isect.HitDist
+
         expected := false
         expectedDist := Infinity
         for _, p := range bvh.primitives {

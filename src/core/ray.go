@@ -5,12 +5,12 @@ import (
 )
 
 type Ray struct {
-    Org Vector3d
-    Dir Vector3d
+    Org *Vector3d
+    Dir *Vector3d
     MaxDist Float
 }
 
-func NewRay(org Vector3d, dir Vector3d) *Ray {
+func NewRay(org *Vector3d, dir *Vector3d) *Ray {
     return &Ray{
         Org: org,
         Dir: dir,
@@ -18,7 +18,8 @@ func NewRay(org Vector3d, dir Vector3d) *Ray {
     }
 }
 
-func (r *Ray) InvDir() (d Vector3d) {
+func (r *Ray) InvDir() *Vector3d {
+    d := &Vector3d{}
     if (math.Abs(r.Dir.X) > Eps) {
         d.X = 1.0 / r.Dir.X
     } else {
@@ -36,5 +37,5 @@ func (r *Ray) InvDir() (d Vector3d) {
     } else {
         d.Z = Infinity * Sign(r.Dir.Z)
     }
-    return
+    return d
 }

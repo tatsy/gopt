@@ -1,11 +1,11 @@
 package main
 
 import (
-    "fmt"
     . "core"
     . "accelerator"
     . "bsdf"
     . "shape"
+    . "light"
     . "sensor"
     . "sampler"
     . "integrator"
@@ -17,6 +17,7 @@ import (
 
 const (
     fileName = "data/gopher.obj"
+    lightFileName = "data/sphere.obj"
 )
 
 func main() {
@@ -37,28 +38,42 @@ func main() {
         }
     }()
 
+    var primitives []*Primitive
+    var lights []Light
 
+    // Scene
     triMesh := TriMesh{}
-    success := triMesh.Load(fileName)
-    if !success {
+    if !triMesh.Load(fileName) {
         panic("Failed to load file!")
     }
-    fmt.Printf("%d triangles\n", len(triMesh.Triangles))
 
-    numTris := len(triMesh.Triangles)
-    primitives := make([]Primitive, numTris)
-
-    bsdf := LambertBsdf{Color{1.0, 1.0, 1.0}}
+    bsdf := &LambertBsdf{Color{1.0, 1.0, 1.0}}
     for i := range triMesh.Triangles {
-        primitives[i] = NewPrimitive(&triMesh.Triangles[i], &bsdf)
+        primitives = append(primitives, NewPrimitive(triMesh.Triangles[i], bsdf))
     }
+
+    // Light
+    lightMesh := TriMesh{}
+    if !lightMesh.Load(lightFileName) {
+        panic("Failed to load light file!")
+    }
+
+    lightBsdf := &LambertBsdf{Color{0.0, 0.0, 0.0}}
+    Le := NewColor(4.0, 4.0, 4.0)
+    for i := range lightMesh.Triangles {
+        area := NewAreaLight(triMesh.Triangles[i], Le)
+        lights = append(lights, area)
+        primitives = append(primitives, NewLightPrimitive(triMesh.Triangles[i], lightBsdf, area))
+    }
+
     bvh := NewBvh(primitives)
+    scene := NewScene(bvh, lights)
 
     film := NewFilm(256, 256)
     sensor := NewPerspectiveSensor(
-        Vector3d{5.0, 5.0, 5.0},  // Center
-        Vector3d{0.0, 0.0, 0.0},  // To
-        Vector3d{0.0, 1.0, 0.0},  // Up
+        NewVector3d(5.0, 5.0, 5.0),  // Center
+        NewVector3d(0.0, 0.0, 0.0),  // To
+        NewVector3d(0.0, 1.0, 0.0),  // Up
         45.0,  // Fov
         film.Aspect(),  // Aspect
         0.1,  // Near clip
@@ -68,5 +83,5 @@ func main() {
 
     sampler := &IndependentSampler{}
     integrator := PathIntegrator{}
-    integrator.Render(bvh, sensor, sampler)
+    integrator.Render(scene, sensor, sampler)
 }

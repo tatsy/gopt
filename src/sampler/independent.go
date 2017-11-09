@@ -8,6 +8,10 @@ import (
 type IndependentSampler struct {
 }
 
-func (sampler *IndependentSampler) Get() Float {
+func (sampler *IndependentSampler) Get1D() Float {
     return Float(rand.Float64())
+}
+
+func (sampler *IndependentSampler) Get2D() Point2d {
+    return Point2d{rand.Float64(), rand.Float64()}
 }

@@ -6,8 +6,15 @@ import (
 )
 
 type Triangle struct {
-    Points [3]Vector3d
-    Normals [3]Vector3d
+    Points [3]*Vector3d
+    Normals [3]*Vector3d
+}
+
+func NewTriangle(points, normals [3]*Vector3d) *Triangle {
+    t := &Triangle{}
+    t.Points = points
+    t.Normals = normals
+    return t
 }
 
 func (t *Triangle) Intersect(ray *Ray, isect *Intersection) bool {
@@ -43,15 +50,26 @@ func (t *Triangle) Intersect(ray *Ray, isect *Intersection) bool {
     nrm = nrm.Add(t.Normals[2].Scale(v))
     //Point2d uv = (1.0 - u - v) * uvs_[0] + u * uvs_[1] + v * uvs_[2];
 
-    *isect = Intersection{
-        Pos: pos,
-        Normal: nrm,
-        HitDist: tHit,
-    }
+    isect = NewIntersection(pos, nrm, tHit)
     return true
 }
 
-func (t *Triangle) Bounds() Bounds3d {
+func (t *Triangle) SampleP(rnd Point2d, pos *Vector3d, normal *Vector3d) {
+    u, v := rnd.X, rnd.Y
+    if u + v >= 1.0 {
+        u = 1.0 - u
+        v = 1.0 - v
+    }
+
+    pos = t.Points[0].Scale(1.0 - u - v).
+          Add(t.Points[1].Scale(u)).
+          Add(t.Points[2].Scale(v))
+    normal = t.Normals[0].Scale(1.0 - u - v).
+             Add(t.Normals[1].Scale(u)).
+             Add(t.Normals[2].Scale(v))
+}
+
+func (t *Triangle) Bounds() *Bounds3d {
     b := NewBounds3d()
     b.MinPos.X = math.Min(t.Points[0].X, math.Min(t.Points[1].X, t.Points[2].X))
     b.MinPos.Y = math.Min(t.Points[0].Y, math.Min(t.Points[1].Y, t.Points[2].Y))

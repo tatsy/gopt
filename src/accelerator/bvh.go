@@ -8,25 +8,25 @@ import (
 type BvhNode struct {
     left, right *BvhNode
     shape Shape
-    bbox Bounds3d
+    bbox *Bounds3d
 }
 
-func NewLeafNode(shape Shape) (node *BvhNode) {
-    node = &BvhNode{}
+func NewLeafNode(shape Shape) *BvhNode {
+    node := &BvhNode{}
     node.left = nil
     node.right = nil
     node.shape = shape
     node.bbox = shape.Bounds()
-    return
+    return node
 }
 
-func NewForkNode(left *BvhNode, right *BvhNode, b Bounds3d) (node *BvhNode) {
-    node = &BvhNode{}
+func NewForkNode(left *BvhNode, right *BvhNode, b *Bounds3d) *BvhNode {
+    node := &BvhNode{}
     node.left = left
     node.right = right
     node.shape = nil
     node.bbox = b
-    return
+    return node
 }
 
 func (node *BvhNode) IsLeaf() bool {
@@ -34,12 +34,12 @@ func (node *BvhNode) IsLeaf() bool {
 }
 
 type SortItem struct {
-    v Vector3d
+    v *Vector3d
     i int
 }
 
 type AxisSorter struct {
-    Items []SortItem
+    Items []*SortItem
     Axis int
 }
 
@@ -58,38 +58,38 @@ func (a *AxisSorter) Less(i, j int) bool {
 }
 
 type Bvh struct {
-    primitives []Primitive
-    nodes []BvhNode
+    primitives []*Primitive
+    nodes []*BvhNode
     root *BvhNode
 }
 
-func NewBvh(primitives []Primitive) (bvh *Bvh) {
-    bvh = &Bvh{}
+func NewBvh(primitives []*Primitive) *Bvh {
+    bvh := &Bvh{}
     bvh.primitives = primitives
     bvh.root = NewBvhSub(bvh, primitives)
-    return
+    return bvh
 }
 
-func NewBvhSub(bvh *Bvh, primitives []Primitive) *BvhNode {
+func NewBvhSub(bvh *Bvh, primitives []*Primitive) *BvhNode {
     if len(primitives) == 1 {
         node := NewLeafNode(primitives[0].Shape)
-        bvh.nodes = append(bvh.nodes, *node)
+        bvh.nodes = append(bvh.nodes, node)
         return node
     }
 
     bbox := NewBounds3d()
-    items := make([]SortItem, len(primitives))
+    items := make([]*SortItem, len(primitives))
     for i := range primitives {
         b := primitives[i].Shape.Bounds()
         bbox.Merge(b)
-        items[i] = SortItem{b.Center(), i}
+        items[i] = &SortItem{b.Center(), i}
     }
     axis := bbox.MaxExtent()
 
     axisSorter := &AxisSorter{items, axis}
     sort.Sort(axisSorter)
 
-    newPrimitives := make([]Primitive, len(primitives))
+    newPrimitives := make([]*Primitive, len(primitives))
     for i := range items {
         newPrimitives[i] = primitives[items[i].i]
     }
@@ -99,7 +99,7 @@ func NewBvhSub(bvh *Bvh, primitives []Primitive) *BvhNode {
     rightNode := NewBvhSub(bvh, newPrimitives[iHalf:])
 
     node := NewForkNode(leftNode, rightNode, bbox)
-    bvh.nodes = append(bvh.nodes, *node)
+    bvh.nodes = append(bvh.nodes, node)
     return node
 }
 

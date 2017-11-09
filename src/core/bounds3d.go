@@ -5,25 +5,30 @@ import (
 )
 
 type Bounds3d struct {
-    MinPos, MaxPos Vector3d
+    MinPos, MaxPos *Vector3d
 }
 
-func NewBounds3d() (b Bounds3d) {
-    b.MinPos = Vector3d{Infinity, Infinity, Infinity}
-    b.MaxPos = Vector3d{-Infinity, -Infinity, -Infinity}
-    return
+func NewBounds3d() *Bounds3d {
+    b := &Bounds3d{}
+    b.MinPos = NewVector3d(Infinity, Infinity, Infinity)
+    b.MaxPos = NewVector3d(-Infinity, -Infinity, -Infinity)
+    return b
 }
 
-func (b1 *Bounds3d) Merge(b2 Bounds3d) {
+func NewBounds3dMinMax(minPos, maxPos *Vector3d) *Bounds3d {
+    b := &Bounds3d{}
+    b.MinPos = minPos
+    b.MaxPos = maxPos
+    return b
+}
+
+func (b1 *Bounds3d) Merge(b2 *Bounds3d) {
     b1.MinPos = b1.MinPos.Minimum(b2.MinPos)
     b1.MaxPos = b1.MaxPos.Maximum(b2.MaxPos)
-    return
 }
 
-func (b *Bounds3d) Center() (c Vector3d) {
-    c = b.MinPos.Add(b.MaxPos)
-    c = c.Scale(0.5)
-    return
+func (b *Bounds3d) Center() *Vector3d {
+    return b.MinPos.Add(b.MaxPos).Scale(0.5)
 }
 
 func (b *Bounds3d) MaxExtent() int {

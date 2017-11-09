@@ -6,25 +6,26 @@ import (
     "testing"
 )
 
-func RandVector() (v Vector3d) {
+func RandVector() *Vector3d {
+    v := &Vector3d{}
     v.X = rand.Float64()
     v.Y = rand.Float64()
     v.Z = rand.Float64()
-    return
+    return v
 }
 
-func Equals(u Vector3d, v Vector3d) bool {
+func Equals(u *Vector3d, v *Vector3d) bool {
     return u.X == v.X && u.Y == v.Y && u.Z == v.Z
 }
 
-func AlmostEquals(u Vector3d, v Vector3d) bool {
+func AlmostEquals(u *Vector3d, v *Vector3d) bool {
     eps := 1.0e-12
     return math.Abs(u.X - v.X) < eps && math.Abs(u.Y - v.Y) < eps && math.Abs(u.Z - v.Z) < eps
 }
 
 func TestInistance(t *testing.T) {
-    actual := Vector3d{}
-    expected := Vector3d{0.0, 0.0, 0.0}
+    actual := &Vector3d{}
+    expected := &Vector3d{0.0, 0.0, 0.0}
     if !Equals(actual, expected) {
         t.Error("%v expected, but %v detected", expected, actual)
     }
@@ -34,7 +35,7 @@ func TestAdd(t *testing.T) {
     u := RandVector()
     v := RandVector()
     actual := u.Add(v)
-    expected := Vector3d{u.X + v.X, u.Y + v.Y, u.Z + v.Z}
+    expected := NewVector3d(u.X + v.X, u.Y + v.Y, u.Z + v.Z)
     if !Equals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -43,7 +44,7 @@ func TestAdd(t *testing.T) {
 func TestNegate(t *testing.T) {
     u := RandVector()
     actual := u.Negate()
-    expected := Vector3d{-u.X, -u.Y, -u.Z}
+    expected := NewVector3d(-u.X, -u.Y, -u.Z)
     if !Equals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -53,7 +54,7 @@ func TestSubtract(t *testing.T) {
     u := RandVector()
     v := RandVector()
     actual := u.Subtract(v)
-    expected := Vector3d{u.X - v.X, u.Y - v.Y, u.Z - v.Z}
+    expected := NewVector3d(u.X - v.X, u.Y - v.Y, u.Z - v.Z)
     if !Equals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -63,7 +64,7 @@ func TestScale(t *testing.T) {
     u := RandVector()
     s := rand.Float64()
     actual := u.Scale(s)
-    expected := Vector3d{u.X * s, u.Y * s, u.Z * s}
+    expected := NewVector3d(u.X * s, u.Y * s, u.Z * s)
     if !Equals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -73,7 +74,7 @@ func TestDivide(t *testing.T) {
     u := RandVector()
     s := rand.Float64()
     actual := u.Divide(s)
-    expected := Vector3d{u.X / s, u.Y / s, u.Z / s}
+    expected := NewVector3d(u.X / s, u.Y / s, u.Z / s)
     if !AlmostEquals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -104,11 +105,11 @@ func TestCross(t *testing.T) {
     u := RandVector()
     v := RandVector()
     actual := u.Cross(v)
-    expected := Vector3d{
-        X: u.Y * v.Z - u.Z * v.Y,
-        Y: u.Z * v.X - u.X * v.Z,
-        Z: u.X * v.Y - u.Y * v.X,
-    }
+    expected := NewVector3d(
+        u.Y * v.Z - u.Z * v.Y,
+        u.Z * v.X - u.X * v.Z,
+        u.X * v.Y - u.Y * v.X,
+    )
     if !AlmostEquals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -137,11 +138,11 @@ func TestNormalized(t *testing.T) {
     actual := u.Normalized()
 
     l := math.Sqrt(u.X * u.X + u.Y * u.Y + u.Z * u.Z)
-    expected := Vector3d{
-        X: u.X / l,
-        Y: u.Y / l,
-        Z: u.Z / l,
-    }
+    expected := NewVector3d(
+        u.X / l,
+        u.Y / l,
+        u.Z / l,
+    )
     if !AlmostEquals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -160,11 +161,11 @@ func TestMinimum(t *testing.T) {
     u := RandVector()
     v := RandVector()
     actual := u.Minimum(v)
-    expected := Vector3d{
-        X: math.Min(u.X, v.X),
-        Y: math.Min(u.Y, v.Y),
-        Z: math.Min(u.Z, v.Z),
-    }
+    expected := NewVector3d(
+        math.Min(u.X, v.X),
+        math.Min(u.Y, v.Y),
+        math.Min(u.Z, v.Z),
+    )
     if !Equals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }
@@ -174,11 +175,11 @@ func TestMaximum(t *testing.T) {
     u := RandVector()
     v := RandVector()
     actual := u.Maximum(v)
-    expected := Vector3d{
-        X: math.Max(u.X, v.X),
-        Y: math.Max(u.Y, v.Y),
-        Z: math.Max(u.Z, v.Z),
-    }
+    expected := NewVector3d(
+        math.Max(u.X, v.X),
+        math.Max(u.Y, v.Y),
+        math.Max(u.Z, v.Z),
+    )
     if !Equals(actual, expected) {
         t.Errorf("%v expected, but %v detected", expected, actual)
     }

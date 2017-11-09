@@ -13,15 +13,15 @@ func TestNewBounds3d(t *testing.T) {
 }
 
 func TestMerge(t *testing.T) {
-    b1 := Bounds3d{
-        MinPos: Vector3d{0.0, 0.0, 0.0},
-        MaxPos: Vector3d{1.0, 1.0, 1.0},
-    }
+    b1 := NewBounds3dMinMax(
+        NewVector3d(0.0, 0.0, 0.0),
+        NewVector3d(1.0, 1.0, 1.0),
+    )
 
-    b2 := Bounds3d{
-        MinPos: Vector3d{0.5, 0.5, 0.5},
-        MaxPos: Vector3d{2.0, 2.0, 2.0},
-    }
+    b2 := NewBounds3dMinMax(
+        NewVector3d(0.5, 0.5, 0.5),
+        NewVector3d(2.0, 2.0, 2.0),
+    )
 
     b3 := b1
     b3.Merge(b2)
@@ -31,13 +31,13 @@ func TestMerge(t *testing.T) {
 }
 
 func TestBounds3dIntersect(t *testing.T) {
-    b1 := Bounds3d{
-        MinPos: Vector3d{0.0, 0.0, 0.0},
-        MaxPos: Vector3d{1.0, 1.0, 1.0},
-    }
+    b1 := NewBounds3dMinMax(
+        NewVector3d(0.0, 0.0, 0.0),
+        NewVector3d(1.0, 1.0, 1.0),
+    )
     r := NewRay(
-        Vector3d{1.5, 0.5, 0.5},
-        Vector3d{-1.0, 0.0, 0.0},
+        NewVector3d(1.5, 0.5, 0.5),
+        NewVector3d(-1.0, 0.0, 0.0),
     )
 
     var tMin, tMax Float
@@ -51,10 +51,10 @@ func TestBounds3dIntersect(t *testing.T) {
 }
 
 func TestMaxExtent(t *testing.T) {
-    b1 := Bounds3d{
-        MinPos: Vector3d{1.0, 2.0, 3.0},
-        MaxPos: Vector3d{2.0, 4.0, 6.0},
-    }
+    b1 := NewBounds3dMinMax(
+        NewVector3d(1.0, 2.0, 3.0),
+        NewVector3d(2.0, 4.0, 6.0),
+    )
 
     if b1.MaxExtent() != 2 {
         t.Error("Max extent test is failed!")

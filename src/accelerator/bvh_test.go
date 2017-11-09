@@ -22,7 +22,7 @@ func TestAxisSorter(t *testing.T) {
     }
 
     k := rand.Intn(3)
-    a := AxisSorter{items, k}
+    a := &AxisSorter{items, k}
     sort.Sort(a)
 
     for i := 0; i < len(items) - 1; i++ {
@@ -38,16 +38,17 @@ func TestBvhIntersection(t *testing.T) {
     prims := make([]Primitive, triMesh.NumFaces())
     bsdf := LambertBsdf{}
     for i := range triMesh.Triangles {
-        prims[i] = NewPrimitive(triMesh.Triangles[i], bsdf)
+        prims[i] = NewPrimitive(&triMesh.Triangles[i], &bsdf)
     }
     bvh := NewBvh(prims)
 
     numTrials := 100
     for trial := 0; trial < numTrials; trial++ {
-        ray := NewRay(
-            Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}.Scale(5.0),
-            Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}.Scale(5.0),
-        )
+        org := Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}
+        org = org.Scale(2.0)
+        dir := Vector3d{rand.Float64(), rand.Float64(), rand.Float64()}
+        dir = dir.Scale(2.0)
+        ray := NewRay(org, dir)
 
         var isect Intersection
         actual := bvh.Intersect(ray, &isect)

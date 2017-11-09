@@ -1,8 +1,8 @@
 package integrator
 
 import (
-    . "../core"
-    . "../accelerator"
+    . "core"
+    . "accelerator"
 )
 
 type PathIntegrator struct {

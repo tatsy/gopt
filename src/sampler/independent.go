@@ -2,7 +2,7 @@ package sampler
 
 import (
     "math/rand"
-    . "../core"
+    . "core"
 )
 
 type IndependentSampler struct {

@@ -2,13 +2,13 @@ package main
 
 import (
     "fmt"
-    . "./core"
-    . "./accelerator"
-    . "./bsdf"
-    . "./shape"
-    . "./sensor"
-    . "./sampler"
-    . "./integrator"
+    . "core"
+    . "accelerator"
+    . "bsdf"
+    . "shape"
+    . "sensor"
+    . "sampler"
+    . "integrator"
 )
 
 const (

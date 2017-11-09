@@ -2,7 +2,7 @@ package bsdf
 
 import (
     // "math"
-    . "../core"
+    . "core"
 )
 
 type LambertBsdf struct {

@@ -2,7 +2,7 @@ package shape
 
 import (
     "math"
-    . "../core"
+    . "core"
 )
 
 type Triangle struct {

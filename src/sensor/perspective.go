@@ -2,7 +2,7 @@ package sensor
 
 import (
     "math"
-    . "../core"
+    . "core"
 )
 
 type PerspectiveSensor struct {

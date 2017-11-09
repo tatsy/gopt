@@ -2,7 +2,7 @@ package accelerator
 
 import (
     "sort"
-    . "../core"
+    . "core"
 )
 
 type BvhNode struct {

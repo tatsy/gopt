@@ -3,14 +3,28 @@ sudo: no
 go:
   - 1.9
 
-go_import_path:
-  - "github.com/tatsy/gopt"
+go_import_path: github.com/tatsy/gopt
+
+before_install:
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/mattn/goveralls
+  - go get github.com/modocache/gover
 
 install:
-  make
+  - export GOPATH=$TRAVIS_BUILD_DIR
+  - go build ./...
 
 script:
-  make test
+  - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+
+after_success:
+  - $HOME/gopath/bin/gover
+  - $HOME/gopath/bin/goveralls -coverprofile=gover.coverprofile -service=travis-ci -repotoken $COVERALLS_REPO_TOKEN
+
+env:
+  global:
+    secure: IX5ny+aDB+4lFpO5riuBHyTrWoUhdx5vPCAbavVupJdxuC+yRl1d3+KtCPOojlmbCqCEVseYkH0Iht8Sg7v5dRf2lqoX4p5i54akuP0BBTE5XQi0KAh9vCH/zkx9Kl1WTjm/4QzFxYwy3dCRUNNQZMu/4gFXnVG27GzcAkaQypBdKmpT5Kg8AlAqPTHmvflzTAINdtGHrw0SjL+yE86dQzjw59ipS1omadEfW++ZKyEMR8Wu1B1yPhxPKhVFI+Xq3PHNz9+HyjDYfvyqEgDNVe16/Wx2qLwDKh0CSbhsgxN8uPOrXAxZZjVL9Br1/8wZM39hQTsTW0CD2Fj+YKHxph+uOWEV1l9nBvHIvTR+3gVJewrib8rHK/KY4PARYjKWrhY6Prkd57a5/bjkbjIRoGboS/hNiT2p3yU6C2gd+PqtoygA5X+UX78ab7sGlcxpE8ITfgM/DJe4WbWItjczRa6n4Gm5/APHy1snZs+V+udbXp2I1NLZ/xl+SqISceSnUOvb+6zJ8Y9dPzcJtZOtlzsNCztm7R8Gg6m1p0DYcDkLgJFy6ejdXq/0/yz25qGMpdEfkvFFqDnoPtc4jm/U9MHavHtsqR0roRQfIqtCfD/6u35OGctwI3rrMttI/UoQMjYrjsz7BewVX10f+HOOqngoplaliIHIFmFftNpCuMM=
+
 
 branches:
   only:

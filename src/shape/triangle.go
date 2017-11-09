@@ -54,10 +54,10 @@ func (t *Triangle) Intersect(ray *Ray, isect *Intersection) bool {
 func (t *Triangle) Bounds() Bounds3d {
     b := NewBounds3d()
     b.MinPos.X = math.Min(t.Points[0].X, math.Min(t.Points[1].X, t.Points[2].X))
-    b.MinPos.X = math.Min(t.Points[0].Y, math.Min(t.Points[1].Y, t.Points[2].Y))
-    b.MinPos.X = math.Min(t.Points[0].Z, math.Min(t.Points[1].Z, t.Points[2].Z))
+    b.MinPos.Y = math.Min(t.Points[0].Y, math.Min(t.Points[1].Y, t.Points[2].Y))
+    b.MinPos.Z = math.Min(t.Points[0].Z, math.Min(t.Points[1].Z, t.Points[2].Z))
     b.MaxPos.X = math.Max(t.Points[0].X, math.Max(t.Points[1].X, t.Points[2].X))
-    b.MaxPos.X = math.Max(t.Points[0].Y, math.Max(t.Points[1].Y, t.Points[2].Y))
-    b.MaxPos.X = math.Max(t.Points[0].Z, math.Max(t.Points[1].Z, t.Points[2].Z))
+    b.MaxPos.Y = math.Max(t.Points[0].Y, math.Max(t.Points[1].Y, t.Points[2].Y))
+    b.MaxPos.Z = math.Max(t.Points[0].Z, math.Max(t.Points[1].Z, t.Points[2].Z))
     return b
 }

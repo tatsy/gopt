@@ -3,6 +3,7 @@ all:
 	go build ./...
 
 run:
+	export GOPATH=`pwd`
 	go build ./src/main.go && ./main
 
 test:

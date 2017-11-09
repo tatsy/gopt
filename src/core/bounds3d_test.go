@@ -49,3 +49,14 @@ func TestBounds3dIntersect(t *testing.T) {
         t.Errorf("Failed: %f vs %f", tMin, 0.5)
     }
 }
+
+func TestMaxExtent(t *testing.T) {
+    b1 := Bounds3d{
+        MinPos: Vector3d{1.0, 2.0, 3.0},
+        MaxPos: Vector3d{2.0, 4.0, 6.0},
+    }
+
+    if b1.MaxExtent() != 2 {
+        t.Error("Max extent test is failed!")
+    }
+}

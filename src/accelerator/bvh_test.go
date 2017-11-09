@@ -52,24 +52,25 @@ func TestBvhIntersection(t *testing.T) {
             rand.Float64(),
             rand.Float64(),
             rand.Float64()).Scale(2.0)
-        ray := NewRay(org, dir)
+        r1 := NewRay(org, dir)
 
         var isect Intersection
-        actual := bvh.Intersect(ray, &isect)
+        actual := bvh.Intersect(r1, &isect)
         actualDist := isect.HitDist
 
+        r2 := NewRay(org, dir)
         expected := false
         expectedDist := Infinity
         for _, p := range bvh.primitives {
             var temp Intersection
-            if p.Shape.Intersect(ray, &temp) {
+            if p.Shape.Intersect(r2, &temp) {
                 expected = true
                 expectedDist = math.Min(expectedDist, temp.HitDist)
             }
         }
 
         if actual != expected {
-            t.Errorf("Intersection test failed:\n%v\nexpected: %v\nactual: %v", ray, expected, actual)
+            t.Errorf("Intersection test failed:\n%v\nexpected: %v\nactual: %v", r1, expected, actual)
         } else if actual && expected {
             if math.Abs(actualDist - expectedDist) >= 1.0e-8 {
                 t.Errorf("Intersection distances differ: %f != %f", expectedDist, actualDist)

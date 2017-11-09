@@ -26,6 +26,19 @@ func (b *Bounds3d) Center() (c Vector3d) {
     return
 }
 
+func (b *Bounds3d) MaxExtent() int {
+    v := b.MaxPos.Subtract(b.MinPos)
+    v = v.Abs()
+    switch {
+    case v.X > v.Y && v.X > v.Z:
+        return 0
+    case v.Y > v.Z:
+        return 1
+    default:
+        return 2
+    }
+}
+
 func (b *Bounds3d) Intersect(ray *Ray, tNear *Float, tFar *Float) bool {
     t0 := 0.0
     t1 := ray.MaxDist

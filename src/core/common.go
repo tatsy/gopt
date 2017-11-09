@@ -12,6 +12,8 @@ const (
     Infinity = Float(1.0e20)
 )
 
+type Semaphore struct {}
+
 func Sign(x Float) Float {
     if x < 0.0 {
         return -1.0

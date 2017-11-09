@@ -20,7 +20,7 @@ const (
 )
 
 func main() {
-    cpuprofile := "mycpu.prof"
+    cpuprofile := "profile.prof"
     f, err := os.Create(cpuprofile)
     if err != nil {
        log.Fatal(err)

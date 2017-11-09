@@ -13,12 +13,21 @@ func (integrator *PathIntegrator) Render(bvh *Bvh, sensor Sensor, sampler Sample
     width := sensor.Film().Width
     height := sensor.Film().Height
     film := sensor.Film()
+    sem := make(chan Semaphore, width)
     for y := 0; y < height; y++ {
         for x := 0; x < width; x++ {
-            ray := sensor.SpawnRay(x, y)
-            L := integrator.Li(bvh, ray, sampler)
-            film.Update(x, y, L)
+            go func(x, y int) {
+                ray := sensor.SpawnRay(x, y)
+                L := integrator.Li(bvh, ray, sampler)
+                film.Update(x, y, L)
+                sem <- Semaphore{}
+            } (x, y)
         }
+
+        for x := 0; x < width; x++ {
+            <-sem
+        }
+
         ProgressBar(y + 1, height)
     }
     fmt.Println()

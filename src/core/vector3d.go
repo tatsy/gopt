@@ -43,6 +43,13 @@ func (v *Vector3d) Divide(s Float) (ret Vector3d) {
     return
 }
 
+func (v *Vector3d) Abs() (ret Vector3d) {
+    ret.X = math.Abs(v.X)
+    ret.Y = math.Abs(v.Y)
+    ret.Z = math.Abs(v.Z)
+    return
+}
+
 func (v1 *Vector3d) Dot(v2 Vector3d) (ret Float) {
     ret = v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z
     return

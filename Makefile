@@ -9,4 +9,4 @@ test:
 	go test ./... --cover
 
 clean:
-	rm -rf main *.jpg *.png
+	rm -rf main *.jpg *.png *.prof

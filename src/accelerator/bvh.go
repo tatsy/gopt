@@ -66,11 +66,11 @@ type Bvh struct {
 func NewBvh(primitives []Primitive) (bvh *Bvh) {
     bvh = &Bvh{}
     bvh.primitives = primitives
-    bvh.root = NewBvhSub(bvh, primitives, 0)
+    bvh.root = NewBvhSub(bvh, primitives)
     return
 }
 
-func NewBvhSub(bvh *Bvh, primitives []Primitive, axis int) *BvhNode {
+func NewBvhSub(bvh *Bvh, primitives []Primitive) *BvhNode {
     if len(primitives) == 1 {
         node := NewLeafNode(primitives[0].Shape)
         bvh.nodes = append(bvh.nodes, *node)
@@ -84,8 +84,9 @@ func NewBvhSub(bvh *Bvh, primitives []Primitive, axis int) *BvhNode {
         bbox.Merge(b)
         items[i] = SortItem{b.Center(), i}
     }
+    axis := bbox.MaxExtent()
 
-    axisSorter := &AxisSorter{items, axis % 3}
+    axisSorter := &AxisSorter{items, axis}
     sort.Sort(axisSorter)
 
     newPrimitives := make([]Primitive, len(primitives))
@@ -94,8 +95,8 @@ func NewBvhSub(bvh *Bvh, primitives []Primitive, axis int) *BvhNode {
     }
 
     iHalf := len(newPrimitives) / 2
-    leftNode := NewBvhSub(bvh, newPrimitives[:iHalf], (axis + 1) % 3)
-    rightNode := NewBvhSub(bvh, newPrimitives[iHalf:], (axis + 1) % 3)
+    leftNode := NewBvhSub(bvh, newPrimitives[:iHalf])
+    rightNode := NewBvhSub(bvh, newPrimitives[iHalf:])
 
     node := NewForkNode(leftNode, rightNode, bbox)
     bvh.nodes = append(bvh.nodes, *node)

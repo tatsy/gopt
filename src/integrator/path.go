@@ -33,32 +33,47 @@ func (integrator *PathIntegrator) Render(scene *Scene, sensor Sensor, sampler Sa
     film.Save("image.jpg")
 }
 
-func (integrator *PathIntegrator) Li(scene *Scene, ray *Ray, sampler Sampler) *Color {
-    var isect Intersection
-    if scene.Intersect(ray, &isect) {
-        return NewColor(1.0, 1.0, 0.0)
-    }
-    return NewColor(0.0, 0.0, 0.0)
+func (integrator *PathIntegrator) Li(scene *Scene, r *Ray, sampler Sampler) *Color {
+    maxBounces := 16
+    ray := r.Clone()
+    L := NewColor(0.0, 0.0, 0.0)
+    beta := NewColor(1.0, 1.0, 1.0)
+    specularBounce := false
 
-    // maxBounces := 16
-    // L := NewColor(0.0, 0.0, 0.0)
-    // beta := NewColor(1.0, 1.0, 1.0)
-    // specularBounce := false
-    //
-    // for bounce := 0; bounce < maxBounces; bounce++ {
-    //     var isect Intersection
-    //     isIntersect := scene.Intersect(ray, &isect)
-    //     if !isIntersect {
-    //         if bounce == 0 || specularBounce {
-    //             //return scene.Lights
-    //         } else {
-    //             for _, l := range scene.Lights {
-    //                 L = L.Add(l.Le(ray).Multiply(beta))
-    //             }
-    //             return L
-    //         }
-    //     }
-    // }
-    //
-    // return L
+    for bounces := 0; ; bounces++ {
+        var isect Intersection
+        isIntersect := scene.Intersect(ray, &isect)
+        if bounces == 0 || specularBounce {
+            if isIntersect {
+                rr := beta.Multiply(isect.Le(ray.Dir.Negate()))
+                L = L.Add(rr)
+            } else {
+                for _, l := range scene.Lights {
+                    rr := beta.Multiply(l.LeWithRay(ray))
+                    L = L.Add(rr)
+                }
+            }
+        }
+
+        if !isIntersect || bounces >= maxBounces {
+            break
+        }
+
+        wo := ray.Dir.Negate()
+        f, wi, pdf, bsdfType := isect.Bsdf().SampleWi(wo, sampler.Get2D())
+
+        if f.IsBlack() || pdf == 0.0 {
+            break
+        }
+
+        beta = beta.Multiply(f).Scale(wi.Dot(isect.Normal) / pdf)
+        specularBounce = (bsdfType & BSDF_SPECULAR) != 0
+        ray = isect.SpawnRay(wi)
+    }
+
+    if !L.IsBlack() {
+        fmt.Println(L)
+    }
+
+    return L
 }

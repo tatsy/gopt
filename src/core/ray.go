@@ -18,6 +18,14 @@ func NewRay(org *Vector3d, dir *Vector3d) *Ray {
     }
 }
 
+func (ray *Ray) Clone() *Ray {
+    return &Ray{
+        Org: ray.Org,
+        Dir: ray.Dir,
+        MaxDist: ray.MaxDist,
+    }
+}
+
 func (r *Ray) InvDir() *Vector3d {
     d := &Vector3d{}
     if (math.Abs(r.Dir.X) > Eps) {

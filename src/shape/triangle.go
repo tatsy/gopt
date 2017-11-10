@@ -17,7 +17,7 @@ func NewTriangle(points, normals [3]*Vector3d) *Triangle {
     return t
 }
 
-func (t *Triangle) Intersect(ray *Ray, isect *Intersection) bool {
+func (t *Triangle) Intersect(ray *Ray, tHit *Float, isect *Intersection) bool {
     e1 := t.Points[1].Subtract(t.Points[0]);
     e2 := t.Points[2].Subtract(t.Points[0]);
     pVec := ray.Dir.Cross(e2)
@@ -39,18 +39,18 @@ func (t *Triangle) Intersect(ray *Ray, isect *Intersection) bool {
         return false
     }
 
-    tHit := e2.Dot(qVec) * invDet
-    if tHit <= Eps || tHit > ray.MaxDist {
+    *tHit = e2.Dot(qVec) * invDet
+    if *tHit <= Eps || *tHit > ray.MaxDist {
         return false
     }
 
-    pos := ray.Org.Add(ray.Dir.Scale(tHit))
-    nrm := t.Normals[0].Scale(1.0 - u - v)
-    nrm = nrm.Add(t.Normals[1].Scale(u))
-    nrm = nrm.Add(t.Normals[2].Scale(v))
+    pos := ray.Org.Add(ray.Dir.Scale(*tHit))
+    nrm := t.Normals[0].Scale(1.0 - u - v).
+           Add(t.Normals[1].Scale(u)).
+           Add(t.Normals[2].Scale(v))
     //Point2d uv = (1.0 - u - v) * uvs_[0] + u * uvs_[1] + v * uvs_[2];
 
-    isect = NewIntersection(pos, nrm, tHit)
+    *isect = *NewIntersection(pos, nrm)
     return true
 }
 

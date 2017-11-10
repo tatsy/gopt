@@ -31,9 +31,7 @@ func (v *Vector3d) Negate() *Vector3d {
 }
 
 func (v1 *Vector3d) Subtract(v2 *Vector3d) *Vector3d {
-    ret := &Vector3d{}
-    ret = v1.Add(v2.Negate())
-    return ret
+    return v1.Add(v2.Negate())
 }
 
 func (v1 *Vector3d) Scale(s Float) *Vector3d {
@@ -48,9 +46,7 @@ func (v *Vector3d) Divide(s Float) *Vector3d {
     if s == 0.0 {
         panic("Zero division!")
     }
-    ret := &Vector3d{}
-    ret = v.Scale(1.0 / s)
-    return ret
+    return v.Scale(1.0 / s)
 }
 
 func (v *Vector3d) Abs() *Vector3d {

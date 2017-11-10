@@ -21,13 +21,16 @@ func (l *AreaLight) SampleP(u Point2d, pos *Vector3d, normal *Vector3d, L *Color
     l.shape.SampleP(u, pos, normal)
 }
 
-func (l *AreaLight) Le(ray *Ray) *Color {
+func (l *AreaLight) Le() *Color {
+    return l.radiance
+}
+
+func (l *AreaLight) LeWithRay(ray *Ray) *Color {
+    var tHit Float
     var isect Intersection
-    if l.shape.Intersect(ray, &isect) {
+    if l.shape.Intersect(ray, &tHit, &isect) {
         dot := -ray.Dir.Dot(isect.Normal)
-        temp := ray.Org.Subtract(isect.Pos)
-        dist2 := temp.LengthSquared()
-        return l.radiance.Scale(dot / dist2)
+        return l.radiance.Scale(dot / (tHit * tHit))
     }
     return NewColor(0.0, 0.0, 0.0)
 }

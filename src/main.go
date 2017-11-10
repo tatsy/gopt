@@ -47,7 +47,7 @@ func main() {
         panic("Failed to load file!")
     }
 
-    bsdf := &LambertBsdf{Color{1.0, 1.0, 1.0}}
+    bsdf := NewLambertReflection(NewColor(1.0, 1.0, 1.0))
     for i := range triMesh.Triangles {
         primitives = append(primitives, NewPrimitive(triMesh.Triangles[i], bsdf))
     }
@@ -58,7 +58,7 @@ func main() {
         panic("Failed to load light file!")
     }
 
-    lightBsdf := &LambertBsdf{Color{0.0, 0.0, 0.0}}
+    lightBsdf := NewLambertReflection(NewColor(0.0, 0.0, 0.0))
     Le := NewColor(4.0, 4.0, 4.0)
     for i := range lightMesh.Triangles {
         area := NewAreaLight(triMesh.Triangles[i], Le)

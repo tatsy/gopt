@@ -36,7 +36,7 @@ func TestAxisSorter(t *testing.T) {
 func TestBvhIntersection(t *testing.T) {
     triMesh := NewTriMeshFromFile("../../data/cube.obj")
     prims := make([]*Primitive, triMesh.NumFaces())
-    bsdf := &LambertBsdf{}
+    bsdf := NewLambertReflection(NewColor(1.0, 1.0, 1.0))
     for i := range triMesh.Triangles {
         prims[i] = NewPrimitive(triMesh.Triangles[i], bsdf)
     }
@@ -56,17 +56,23 @@ func TestBvhIntersection(t *testing.T) {
 
         var isect Intersection
         actual := bvh.Intersect(r1, &isect)
-        actualDist := isect.HitDist
+        actualDist := Infinity
+        if actual {
+            actualDist = r1.Org.Subtract(isect.Pos).Length()
+        }
 
         r2 := NewRay(org, dir)
         expected := false
-        expectedDist := Infinity
         for _, p := range bvh.primitives {
             var temp Intersection
-            if p.Shape.Intersect(r2, &temp) {
+            if p.Intersect(r2, &temp) {
                 expected = true
-                expectedDist = math.Min(expectedDist, temp.HitDist)
+                isect = temp
             }
+        }
+        expectedDist := Infinity
+        if expected {
+            expectedDist = r2.Org.Subtract(isect.Pos).Length()
         }
 
         if actual != expected {

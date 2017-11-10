@@ -7,16 +7,16 @@ import (
 
 type BvhNode struct {
     left, right *BvhNode
-    shape Shape
+    primId int
     bbox *Bounds3d
 }
 
-func NewLeafNode(shape Shape) *BvhNode {
+func NewLeafNode(primId int, b *Bounds3d) *BvhNode {
     node := &BvhNode{}
     node.left = nil
     node.right = nil
-    node.shape = shape
-    node.bbox = shape.Bounds()
+    node.primId = primId
+    node.bbox = b
     return node
 }
 
@@ -24,7 +24,7 @@ func NewForkNode(left *BvhNode, right *BvhNode, b *Bounds3d) *BvhNode {
     node := &BvhNode{}
     node.left = left
     node.right = right
-    node.shape = nil
+    node.primId = -1
     node.bbox = b
     return node
 }
@@ -38,9 +38,23 @@ type SortItem struct {
     i int
 }
 
+func NewSortItem(v *Vector3d, i int) *SortItem {
+    item := &SortItem{}
+    item.v = v
+    item.i = i
+    return item
+}
+
 type AxisSorter struct {
     Items []*SortItem
     Axis int
+}
+
+func NewAxisSorter(items []*SortItem, axis int) *AxisSorter {
+    sorter := &AxisSorter{}
+    sorter.Items = items
+    sorter.Axis = axis
+    return sorter
 }
 
 func (a *AxisSorter) Len() int {
@@ -57,6 +71,18 @@ func (a *AxisSorter) Less(i, j int) bool {
     return v1.NthElement(a.Axis) < v2.NthElement(a.Axis)
 }
 
+type IndexedPrimitive struct {
+    p *Primitive
+    i int
+}
+
+func NewIndexedPrimitive(p *Primitive, i int) *IndexedPrimitive {
+    ip := &IndexedPrimitive{}
+    ip.p = p
+    ip.i = i
+    return ip
+}
+
 type Bvh struct {
     primitives []*Primitive
     nodes []*BvhNode
@@ -66,13 +92,19 @@ type Bvh struct {
 func NewBvh(primitives []*Primitive) *Bvh {
     bvh := &Bvh{}
     bvh.primitives = primitives
-    bvh.root = NewBvhSub(bvh, primitives)
+
+    ips := make([]*IndexedPrimitive, len(primitives))
+    for i, p := range primitives {
+        ips[i] = NewIndexedPrimitive(p, i)
+    }
+
+    bvh.root = NewBvhSub(bvh, ips)
     return bvh
 }
 
-func NewBvhSub(bvh *Bvh, primitives []*Primitive) *BvhNode {
+func NewBvhSub(bvh *Bvh, primitives []*IndexedPrimitive) *BvhNode {
     if len(primitives) == 1 {
-        node := NewLeafNode(primitives[0].Shape)
+        node := NewLeafNode(primitives[0].i, primitives[0].p.Bounds())
         bvh.nodes = append(bvh.nodes, node)
         return node
     }
@@ -80,7 +112,7 @@ func NewBvhSub(bvh *Bvh, primitives []*Primitive) *BvhNode {
     bbox := NewBounds3d()
     items := make([]*SortItem, len(primitives))
     for i := range primitives {
-        b := primitives[i].Shape.Bounds()
+        b := primitives[i].p.Bounds()
         bbox.Merge(b)
         items[i] = &SortItem{b.Center(), i}
     }
@@ -89,7 +121,7 @@ func NewBvhSub(bvh *Bvh, primitives []*Primitive) *BvhNode {
     axisSorter := &AxisSorter{items, axis}
     sort.Sort(axisSorter)
 
-    newPrimitives := make([]*Primitive, len(primitives))
+    newPrimitives := make([]*IndexedPrimitive, len(primitives))
     for i := range items {
         newPrimitives[i] = primitives[items[i].i]
     }
@@ -117,10 +149,10 @@ func (bvh *Bvh) Intersect(r *Ray, isect *Intersection) bool {
         if node.IsLeaf() {
             // Leaf node
             var temp Intersection
-            if node.shape.Intersect(r, &temp) {
+            p := bvh.primitives[node.primId]
+            if p.Intersect(r, &temp) {
                 ret = true
                 *isect = temp
-                r.MaxDist = temp.HitDist
             }
         } else {
             // Fork node

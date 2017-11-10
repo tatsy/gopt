@@ -16,6 +16,10 @@ func (c *Color) Y() Float {
     return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B
 }
 
+func (c *Color) IsBlack() bool {
+    return c.R == 0.0 && c.G == 0.0 && c.B == 0.0
+}
+
 func (c1 *Color) Add(c2 *Color) *Color {
     ret := &Color{}
     ret.R = c1.R + c2.R

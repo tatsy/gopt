@@ -1,6 +1,12 @@
 package main
 
 import (
+    "os"
+    "log"
+    "flag"
+    "path/filepath"
+    "io/ioutil"
+    "encoding/json"
     . "core"
     . "accelerator"
     . "shape"
@@ -23,6 +29,16 @@ var lightFiles = []string{
     "data/sphere.obj",
 }
 
+type JsonObject struct {
+    Name string `json:"name"`
+    Params []JsonParam  `json:"parameters"`
+}
+
+type JsonParam struct {
+    Name string `json:"name"`
+    Value string `json:"value"`
+}
+
 func main() {
     // cpuprofile := "profile.prof"
     // f, err := os.Create(cpuprofile)
@@ -41,59 +57,84 @@ func main() {
     //     }
     // }()
 
-    params := NewRenderParams()
-    params.AddInt("image.width", 640)
-    params.AddInt("image.height", 360)
-    params.AddInt("integrator.max-bounces", 16)
-    params.AddInt("integrator.num-samples", 16)
+    // Parse command line args
+    var jsonFile string
+    flag.StringVar(&jsonFile, "input", "", "Input JSON file")
+    flag.StringVar(&jsonFile, "i",     "", "Input JSON file")
+    flag.Parse()
+    if jsonFile == "" {
+        flag.Usage()
+        os.Exit(0)
+    }
 
+
+    // File info
+    absPath, _ := filepath.Abs(jsonFile)
+    absDir := filepath.Dir(absPath)
+
+    // Parse JSON file
+    bytes, err := ioutil.ReadFile(jsonFile)
+    if err != nil {
+        log.Fatal(err)
+    }
+    var jsonObjects []JsonObject
+    json.Unmarshal(bytes, &jsonObjects)
+
+    // Parse objects, lights and parameters
+    params := NewRenderParams()
     var primitives []*Primitive
     var lights []Light
+    for _, obj := range jsonObjects {
+        switch obj.Name {
+        case "shape":
+            for _, par := range obj.Params {
+                if par.Name == "obj" {
+                    fileName := filepath.Join(absDir, par.Value)
+                    triMesh := TriMesh{}
+                    if !triMesh.Load(fileName) {
+                        panic("Failed to load file!")
+                    }
 
-    // Scene
-    for _, fileName := range objFiles {
-        triMesh := TriMesh{}
-        if !triMesh.Load(fileName) {
-            panic("Failed to load file!")
-        }
+                    for _, p := range triMesh.Primitives {
+                        primitives = append(primitives, p)
+                    }
+                }
+            }
+        case "light":
+            for _, par := range obj.Params {
+                if par.Name == "obj" {
+                    fileName := filepath.Join(absDir, par.Value)
+                    triMesh := TriMesh{}
+                    if !triMesh.Load(fileName) {
+                        panic("Failed to load light file!")
+                    }
 
-        for _, p := range triMesh.Primitives {
-            primitives = append(primitives, p)
+                    Le := NewColor(8.0, 8.0, 8.0)
+                    for _, p := range triMesh.Primitives {
+                        area := NewAreaLight(p.Shape(), Le)
+                        p.SetLight(area)
+                        lights = append(lights, area)
+                        primitives = append(primitives, p)
+                    }
+                }
+            }
+        default:
+            for _, par := range obj.Params {
+                name := obj.Name + "." + par.Name
+                value := par.Value
+                params.AddEntry(name, value)
+            }
         }
     }
 
-    // Light
-    for _, fileName := range lightFiles {
-        lightMesh := TriMesh{}
-        if !lightMesh.Load(fileName) {
-            panic("Failed to load light file!")
-        }
-
-        Le := NewColor(8.0, 8.0, 8.0)
-        for _, p := range lightMesh.Primitives {
-            area := NewAreaLight(p.Shape(), Le)
-            p.SetLight(area)
-            lights = append(lights, area)
-            primitives = append(primitives, p)
-        }
-    }
-
+    // Create scene
     bvh := NewBvh(primitives)
     scene := NewScene(bvh, lights)
 
-    imageWidth, _ := params.GetInt("image.width")
-    imageHeight, _ := params.GetInt("image.height")
+    imageWidth := params.GetInt("image.width")
+    imageHeight := params.GetInt("image.height")
     film := NewFilm(imageWidth, imageHeight)
-    sensor := NewPerspectiveSensor(
-        NewVector3d(-2.0, 4.0, 5.0),  // Center
-        NewVector3d(0.0, 2.0, 0.0),  // To
-        NewVector3d(0.0, 1.0, 0.0),  // Up
-        45.0,  // Fov
-        film.Aspect(),  // Aspect
-        0.1,  // Near clip
-        1000.0,  // Far clip
-        film,
-    )
+    sensor := NewSensor(params, film)
 
     sampler := &IndependentSampler{}
     integrator := PathIntegrator{}

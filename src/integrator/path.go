@@ -12,8 +12,8 @@ type PathIntegrator struct {
 func (integrator *PathIntegrator) Render(scene *Scene, sensor Sensor, sampler Sampler, params *RenderParams) {
     width := sensor.Film().Width
     height := sensor.Film().Height
-    numSamples, _ := params.GetInt("integrator.num-samples")
-    maxBounces, _ := params.GetInt("integrator.max-bounces")
+    numSamples := params.GetInt("integrator.num-samples")
+    maxBounces := params.GetInt("integrator.max-bounces")
     film := sensor.Film()
     sem := make(chan Semaphore, width)
 

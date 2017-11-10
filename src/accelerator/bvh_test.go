@@ -33,7 +33,7 @@ func TestAxisSorter(t *testing.T) {
 }
 
 func TestBvhIntersection(t *testing.T) {
-    triMesh := NewTriMeshFromFile("../../data/cube.obj")
+    triMesh := NewTriMeshFromFile("../../data/gopher.obj")
     bvh := NewBvh(triMesh.Primitives)
 
     numTrials := 100

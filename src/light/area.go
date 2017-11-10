@@ -1,6 +1,7 @@
 package light
 
 import (
+    "math"
     . "core"
 )
 
@@ -16,9 +17,19 @@ func NewAreaLight(shape Shape, radiance *Color) *AreaLight {
     return a
 }
 
-func (l *AreaLight) SampleP(u Point2d, pos *Vector3d, normal *Vector3d, L *Color) {
-    L = l.radiance
-    l.shape.SampleP(u, pos, normal)
+func (l *AreaLight) SampleLi(isect *Intersection, u *Point2d) (*Color, *Vector3d, Float, *VisibilityTester){
+    pos, normal, pdf := l.shape.SampleP(u)
+    vt := NewVisibilityTester(isect.Pos, pos)
+
+    wi := pos.Subtract(isect.Pos)
+    distSquared := wi.LengthSquared()
+
+    wi = wi.Normalized()
+    dot0 := math.Abs(wi.Dot(isect.Normal))
+    dot1 := math.Abs(wi.Dot(normal))
+
+    Le := l.radiance.Scale(dot0 * dot1 / distSquared)
+    return Le, wi, pdf, vt
 }
 
 func (l *AreaLight) Le() *Color {

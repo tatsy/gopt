@@ -38,12 +38,12 @@ func (sensor *PerspectiveSensor) Film() *Film {
     return sensor.film
 }
 
-func (sensor *PerspectiveSensor) SpawnRay(x, y int) *Ray {
+func (sensor *PerspectiveSensor) SpawnRay(x, y Float) *Ray {
     width := sensor.film.Width
     height := sensor.film.Height
 
-    u := (Float(x) / Float(width)) - 0.5
-    v := (Float(y) / Float(height)) - 0.5
+    u := (x / Float(width)) - 0.5
+    v := (y / Float(height)) - 0.5
 
     screenHeight := 2.0 * math.Tan(sensor.fov * 0.5) * sensor.nearClip
     screenWidth := sensor.aspect * screenHeight

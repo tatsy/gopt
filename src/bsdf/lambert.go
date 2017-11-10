@@ -15,6 +15,10 @@ func NewLambertReflection(re *Color) *LambertReflection {
     return f
 }
 
+func (f *LambertReflection) Eval(wi, wo *Vector3d) *Color {
+    return f.re.Scale(1.0 / math.Pi)
+}
+
 func (f *LambertReflection) Pdf(wi, wo *Vector3d) Float {
     return 1.0
 }

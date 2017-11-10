@@ -18,6 +18,18 @@ func NewRay(org *Vector3d, dir *Vector3d) *Ray {
     }
 }
 
+func NewRayBetweenPoints(origin, target *Vector3d) *Ray {
+    dir := target.Subtract(origin)
+    dist := dir.Length()
+    dir = dir.Divide(dist)
+
+    ray := &Ray{}
+    ray.Org = origin.Add(dir.Scale(Eps))
+    ray.Dir = dir
+    ray.MaxDist = dist - 2.0 * Eps
+    return ray
+}
+
 func (ray *Ray) Clone() *Ray {
     return &Ray{
         Org: ray.Org,

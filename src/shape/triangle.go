@@ -50,23 +50,29 @@ func (t *Triangle) Intersect(ray *Ray, tHit *Float, isect *Intersection) bool {
            Add(t.Normals[2].Scale(v))
     //Point2d uv = (1.0 - u - v) * uvs_[0] + u * uvs_[1] + v * uvs_[2];
 
-    *isect = *NewIntersection(pos, nrm)
+    *isect = *NewIntersection(pos, nrm, ray.Dir.Negate())
     return true
 }
 
-func (t *Triangle) SampleP(rnd Point2d, pos *Vector3d, normal *Vector3d) {
+func (t *Triangle) SampleP(rnd *Point2d) (*Vector3d, *Vector3d, Float) {
     u, v := rnd.X, rnd.Y
     if u + v >= 1.0 {
         u = 1.0 - u
         v = 1.0 - v
     }
 
-    pos = t.Points[0].Scale(1.0 - u - v).
-          Add(t.Points[1].Scale(u)).
-          Add(t.Points[2].Scale(v))
-    normal = t.Normals[0].Scale(1.0 - u - v).
-             Add(t.Normals[1].Scale(u)).
-             Add(t.Normals[2].Scale(v))
+    pos := t.Points[0].Scale(1.0 - u - v).
+           Add(t.Points[1].Scale(u)).
+           Add(t.Points[2].Scale(v))
+    normal := t.Normals[0].Scale(1.0 - u - v).
+              Add(t.Normals[1].Scale(u)).
+              Add(t.Normals[2].Scale(v))
+    area := 0.5 * (t.Points[1].Subtract(t.Points[0])).Cross(t.Points[2].Subtract(t.Points[0])).Length()
+    pdf := 0.0
+    if area != 0.0 {
+        pdf = 1.0 / area
+    }
+    return pos, normal, pdf
 }
 
 func (t *Triangle) Bounds() *Bounds3d {

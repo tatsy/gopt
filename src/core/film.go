@@ -12,6 +12,7 @@ import (
 type Film struct {
     Width, Height int
     data []*Color
+    weights []Float
 }
 
 func NewFilm(width, height int) *Film {
@@ -19,8 +20,10 @@ func NewFilm(width, height int) *Film {
     film.Width = width
     film.Height = height
     film.data = make([]*Color, width * height)
+    film.weights = make([]Float, width * height)
     for i := 0; i < width * height; i++ {
         film.data[i] = NewColor(0.0, 0.0, 0.0)
+        film.weights[i] = 0.0
     }
     return film
 }
@@ -29,8 +32,14 @@ func (film *Film) Aspect() Float {
     return Float(film.Width) / Float(film.Height)
 }
 
-func (film *Film) Update(x, y int, color *Color) {
-    film.data[y * film.Width + x] = color
+func (film *Film) AddSample(x, y Float, color *Color) {
+    dx := x - 0.5
+    dy := y - 0.5
+    weight := math.Min(0.5 - dx, 0.5 - dy)
+
+    index := int(y) * film.Width + int(x)
+    film.data[index] = film.data[index].Add(color.Scale(weight))
+    film.weights[index] += weight
 }
 
 func (film *Film) Save(filename string) {
@@ -45,9 +54,10 @@ func (film *Film) Save(filename string) {
     image := image.NewRGBA(image.Rect(0, 0, film.Width, film.Height))
     for y := 0; y < height; y++ {
         for x := 0; x < width; x++ {
-            r := toInt(film.data[y * width + x].R)
-            g := toInt(film.data[y * width + x].G)
-            b := toInt(film.data[y * width + x].B)
+            index := y * width + x
+            r := toInt(film.data[index].R / film.weights[index])
+            g := toInt(film.data[index].G / film.weights[index])
+            b := toInt(film.data[index].B / film.weights[index])
             color := color.RGBA{r, g, b, 255}
             image.Set(x, y, color)
         }

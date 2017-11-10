@@ -7,7 +7,6 @@ import (
     "testing"
     . "core"
     . "shape"
-    . "bsdf"
 )
 
 func TestAxisSorter(t *testing.T) {
@@ -35,12 +34,7 @@ func TestAxisSorter(t *testing.T) {
 
 func TestBvhIntersection(t *testing.T) {
     triMesh := NewTriMeshFromFile("../../data/cube.obj")
-    prims := make([]*Primitive, triMesh.NumFaces())
-    bsdf := NewLambertReflection(NewColor(1.0, 1.0, 1.0))
-    for i := range triMesh.Triangles {
-        prims[i] = NewPrimitive(triMesh.Triangles[i], bsdf)
-    }
-    bvh := NewBvh(prims)
+    bvh := NewBvh(triMesh.Primitives)
 
     numTrials := 100
     for trial := 0; trial < numTrials; trial++ {

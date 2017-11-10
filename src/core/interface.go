@@ -6,19 +6,20 @@ type Accelerator interface {
 
 type Shape interface {
     Intersect(ray *Ray, tHit *Float, isect *Intersection) bool
-    SampleP(u Point2d, pos *Vector3d, normal *Vector3d)
+    SampleP(u *Point2d) (*Vector3d, *Vector3d, Float)
     Bounds() *Bounds3d
 }
 
 type Bxdf interface {
     Pdf(wi, wo *Vector3d) Float
+    Eval(wi, wo *Vector3d) *Color
     Sample(wo *Vector3d, u *Point2d) (*Color, *Vector3d, Float)
     Type() int
 }
 
 type Sensor interface {
     Film() *Film
-    SpawnRay(x, y int) *Ray
+    SpawnRay(x, y Float) *Ray
 }
 
 type Sampler interface {
@@ -29,4 +30,5 @@ type Sampler interface {
 type Light interface {
     Le() *Color
     LeWithRay(ray *Ray) *Color
+    SampleLi(isect *Intersection, u *Point2d) (*Color, *Vector3d, Float, *VisibilityTester)
 }

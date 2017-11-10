@@ -1,9 +1,10 @@
+export GOPATH = $(PWD)
+
+
 all:
-	export GOPATH=`pwd`
 	go build ./...
 
 run:
-	export GOPATH=`pwd`
 	go build ./src/main.go && ./main
 
 test:

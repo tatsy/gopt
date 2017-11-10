@@ -33,8 +33,16 @@ func (p *Primitive) Intersect(ray *Ray, isect *Intersection) bool {
     return true
 }
 
+func (p *Primitive) Shape() Shape {
+    return p.shape
+}
+
 func (p *Primitive) Bxdf() Bxdf {
     return p.bxdf
+}
+
+func (p *Primitive) SetLight(l Light) {
+    p.light = l
 }
 
 func (p *Primitive) Light() Light {

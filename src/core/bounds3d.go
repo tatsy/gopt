@@ -22,12 +22,26 @@ func NewBounds3dMinMax(minPos, maxPos *Vector3d) *Bounds3d {
     return b
 }
 
-func (b1 *Bounds3d) Merge(b2 *Bounds3d) {
-    b1.MinPos = b1.MinPos.Minimum(b2.MinPos)
-    b1.MaxPos = b1.MaxPos.Maximum(b2.MaxPos)
+func (b1 *Bounds3d) Merge(b2 *Bounds3d) *Bounds3d {
+    ret := &Bounds3d{}
+    ret.MinPos = b1.MinPos.Minimum(b2.MinPos)
+    ret.MaxPos = b1.MaxPos.Maximum(b2.MaxPos)
+    return ret
 }
 
-func (b *Bounds3d) Center() *Vector3d {
+func (b *Bounds3d) MergePoint(v *Vector3d) *Bounds3d {
+    ret := &Bounds3d{}
+    ret.MinPos = b.MinPos.Minimum(v)
+    ret.MaxPos = b.MaxPos.Maximum(v)
+    return ret
+}
+
+func (b *Bounds3d) Area() Float {
+    diff := b.MaxPos.Subtract(b.MinPos)
+    return math.Abs(diff.X * diff.Y * diff.Z)
+}
+
+func (b *Bounds3d) Centroid() *Vector3d {
     return b.MinPos.Add(b.MaxPos).Scale(0.5)
 }
 

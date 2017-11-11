@@ -1,7 +1,6 @@
 package accelerator
 
 import (
-    "sort"
     "math"
     "math/rand"
     "testing"
@@ -9,25 +8,80 @@ import (
     . "shape"
 )
 
-func TestAxisSorter(t *testing.T) {
-    items := make([]*SortItem, 100)
-    for i := range items {
-        v := NewVector3d(
-            rand.Float64(),
-            rand.Float64(),
-            rand.Float64(),
-        )
-        items[i] = &SortItem{v, i}
+type BvhTestSotable struct {
+    values []int
+}
+
+func NewBvhTestSorable(values []int) *BvhTestSotable {
+    s := &BvhTestSotable{}
+    s.values = values
+    return s
+}
+
+func (s *BvhTestSotable) Len() int {
+    return len(s.values)
+}
+
+func (s *BvhTestSotable) Swap(i, j int) {
+    s.values[i], s.values[j] = s.values[j], s.values[i]
+}
+
+func (s *BvhTestSotable) Less(i, j int) bool {
+    return s.values[i] < s.values[j]
+}
+
+func (s *BvhTestSotable) Check(i int) bool {
+    return s.values[i] % 2 == 0
+}
+
+func TestNthElement(t *testing.T) {
+    numTrials := 100
+    for trial := 0; trial < numTrials; trial++ {
+        numElems := 100
+        values := make([]int, numElems)
+        for i := 0; i < numElems; i++ {
+            values[i] = rand.Intn(numElems)
+        }
+        sortable := NewBvhTestSorable(values)
+        splitPos := 40 //rand.Intn(numElems)
+        SliceNthElement(sortable, 0, numElems, splitPos)
+
+        success := true
+        for i := 0; i < splitPos; i++ {
+            for j := splitPos; j < numElems; j++ {
+                if values[i] > values[j] {
+                    t.Errorf("Condition violated: %d < %d", values[i], values[j])
+                    success = false
+                }
+            }
+        }
+
+        if !success {
+            t.Errorf("%v", values)
+        }
     }
+}
 
-    k := rand.Intn(3)
-    a := &AxisSorter{items, k}
-    sort.Sort(a)
+func TestPartition(t *testing.T) {
+    numTrials := 100
+    for trial := 0; trial < numTrials; trial++ {
+        numElems := 100
+        values := make([]int, numElems)
+        for i := 0; i < numElems; i++ {
+            values[i] = rand.Intn(numElems)
+        }
+        sortable := NewBvhTestSorable(values)
 
-    for i := 0; i < len(items) - 1; i++ {
-        if items[i].v.NthElement(k) >= items[i + 1].v.NthElement(k) {
-            t.Errorf("Item sorting failed!")
-            break
+        splitPos := SlicePartition(sortable)
+        for i := 0; i < splitPos; i++ {
+            if !sortable.Check(i) {
+                t.Errorf("Condition violated: %d %% 2 == 0", values[i])
+            }
+        }
+        for i := splitPos; i < numElems; i++ {
+            if sortable.Check(i) {
+                t.Errorf("Condition violated: %d %% 2 != 0", values[i])
+            }
         }
     }
 }
@@ -36,7 +90,7 @@ func TestBvhIntersection(t *testing.T) {
     triMesh := NewTriMeshFromFile("../../data/gopher.obj")
     bvh := NewBvh(triMesh.Primitives)
 
-    numTrials := 100
+    numTrials := 1000
     for trial := 0; trial < numTrials; trial++ {
         org := NewVector3d(
             rand.Float64(),

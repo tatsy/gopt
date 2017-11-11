@@ -1,87 +1,9 @@
 package accelerator
 
 import (
-    "sort"
+    "math"
     . "core"
 )
-
-type BvhNode struct {
-    left, right *BvhNode
-    primId int
-    bbox *Bounds3d
-}
-
-func NewLeafNode(primId int, b *Bounds3d) *BvhNode {
-    node := &BvhNode{}
-    node.left = nil
-    node.right = nil
-    node.primId = primId
-    node.bbox = b
-    return node
-}
-
-func NewForkNode(left *BvhNode, right *BvhNode, b *Bounds3d) *BvhNode {
-    node := &BvhNode{}
-    node.left = left
-    node.right = right
-    node.primId = -1
-    node.bbox = b
-    return node
-}
-
-func (node *BvhNode) IsLeaf() bool {
-    return node.left == nil && node.right == nil
-}
-
-type SortItem struct {
-    v *Vector3d
-    i int
-}
-
-func NewSortItem(v *Vector3d, i int) *SortItem {
-    item := &SortItem{}
-    item.v = v
-    item.i = i
-    return item
-}
-
-type AxisSorter struct {
-    Items []*SortItem
-    Axis int
-}
-
-func NewAxisSorter(items []*SortItem, axis int) *AxisSorter {
-    sorter := &AxisSorter{}
-    sorter.Items = items
-    sorter.Axis = axis
-    return sorter
-}
-
-func (a *AxisSorter) Len() int {
-    return len(a.Items)
-}
-
-func (a *AxisSorter) Swap(i, j int) {
-    a.Items[i], a.Items[j] = a.Items[j], a.Items[i]
-}
-
-func (a *AxisSorter) Less(i, j int) bool {
-    v1 := a.Items[i].v
-    v2 := a.Items[j].v
-    return v1.NthElement(a.Axis) < v2.NthElement(a.Axis)
-}
-
-type IndexedPrimitive struct {
-    p *Primitive
-    i int
-}
-
-func NewIndexedPrimitive(p *Primitive, i int) *IndexedPrimitive {
-    ip := &IndexedPrimitive{}
-    ip.p = p
-    ip.i = i
-    return ip
-}
 
 type Bvh struct {
     primitives []*Primitive
@@ -93,44 +15,119 @@ func NewBvh(primitives []*Primitive) *Bvh {
     bvh := &Bvh{}
     bvh.primitives = primitives
 
-    ips := make([]*IndexedPrimitive, len(primitives))
+    buildData := make([]*BvhPrimitiveInfo, len(primitives))
     for i, p := range primitives {
-        ips[i] = NewIndexedPrimitive(p, i)
+        buildData[i] = NewBvhPrimitiveInfo(i, p.Bounds())
     }
 
-    bvh.root = NewBvhSub(bvh, ips)
+    bvh.root = NewBvhSub(bvh, buildData)
     return bvh
 }
 
-func NewBvhSub(bvh *Bvh, primitives []*IndexedPrimitive) *BvhNode {
-    if len(primitives) == 1 {
-        node := NewLeafNode(primitives[0].i, primitives[0].p.Bounds())
+func NewBvhSub(bvh *Bvh, buildData []*BvhPrimitiveInfo) *BvhNode {
+    numData := len(buildData)
+    if numData == 1 {
+        node := NewLeafNode(buildData[0].primitiveId, buildData[0].bounds)
         bvh.nodes = append(bvh.nodes, node)
         return node
     }
 
-    bbox := NewBounds3d()
-    items := make([]*SortItem, len(primitives))
-    for i := range primitives {
-        b := primitives[i].p.Bounds()
-        bbox.Merge(b)
-        items[i] = &SortItem{b.Center(), i}
+    bounds := NewBounds3d()
+    for i := 0; i < numData; i++ {
+        bounds = bounds.Merge(buildData[i].bounds)
     }
-    axis := bbox.MaxExtent()
+    splitAxis := bounds.MaxExtent()
 
-    axisSorter := &AxisSorter{items, axis}
-    sort.Sort(axisSorter)
+    splitMethod := BVH_SPLIT_METHOD_SAH
+    splitPos := numData / 2
 
-    newPrimitives := make([]*IndexedPrimitive, len(primitives))
-    for i := range items {
-        newPrimitives[i] = primitives[items[i].i]
+    switch splitMethod {
+    case BVH_SPLIT_METHOD_EQUAL_COUNT:
+        sortable := NewBvhPrimitiveSortable(
+            buildData, splitAxis, nil,
+        )
+        SliceNthElement(sortable, 0, numData, splitPos)
+    case BVH_SPLIT_METHOD_SAH:
+        if numData <= 4 {
+            sortable := NewBvhPrimitiveSortable(
+                buildData, splitAxis, nil,
+            )
+            SliceNthElement(sortable, 0, numData, splitPos)
+        } else {
+            numBuckets := 12
+            centroidBounds := NewBounds3d()
+            for i := 0; i < numData; i++ {
+                centroidBounds = centroidBounds.MergePoint(buildData[i].centroid)
+            }
+
+            buckets := make([]*BucketInfo, numBuckets)
+            for i := 0; i < numBuckets; i++ {
+                buckets[i] = NewBucketInfo(0, NewBounds3d())
+            }
+
+            cMin := centroidBounds.MinPos.NthElement(splitAxis)
+            cMax := centroidBounds.MaxPos.NthElement(splitAxis)
+            invDenom := 1.0 / (math.Abs(cMax - cMin) + Eps)
+            for i := 0; i < numData; i++ {
+                c0 := buildData[i].centroid.NthElement(splitAxis)
+                c1 := centroidBounds.MinPos.NthElement(splitAxis)
+                numer := c0 - c1
+                b := int(Float(numBuckets) * math.Abs(numer) * invDenom)
+                if b == numBuckets {
+                    b = numBuckets - 1
+                }
+
+                buckets[b].count += 1
+                buckets[b].bounds = buckets[b].bounds.Merge(buildData[i].bounds)
+            }
+
+            bucketCost := make([]Float, numBuckets - 1)
+            for i := 0; i < numBuckets - 1; i++ {
+                b0 := NewBounds3d()
+                b1 := NewBounds3d()
+                cnt0, cnt1 := 0, 0
+                for j := 0; j <= i; j++ {
+                    b0 = b0.Merge(buckets[j].bounds)
+                    cnt0 += buckets[j].count
+                }
+                for j := i + 1; j < numBuckets; j++ {
+                    b1 = b1.Merge(buckets[j].bounds)
+                    cnt1 += buckets[j].count
+                }
+                bucketCost[i] += 0.125 + (Float(cnt0) * b0.Area() + Float(cnt1) * b1.Area()) / bounds.Area()
+            }
+
+            minCost := bucketCost[0]
+            minCostSplit := 0
+            for i := 1; i < numBuckets - 1; i++ {
+                if minCost > bucketCost[i] {
+                    minCost = bucketCost[i]
+                    minCostSplit = i
+                }
+            }
+
+            if minCost < Float(numData) {
+                comparator := func(info *BvhPrimitiveInfo) bool {
+                    cMin := centroidBounds.MinPos.NthElement(splitAxis)
+                    cMax := centroidBounds.MaxPos.NthElement(splitAxis)
+                    inv := 1.0 / (math.Abs(cMax - cMin) + Eps)
+                    diff := math.Abs(info.centroid.NthElement(splitAxis) - cMin)
+                    b := int(Float(numBuckets) * diff * inv)
+                    if b >= numBuckets {
+                        b = numBuckets - 1
+                    }
+                    return b <= minCostSplit
+                }
+                splitPos = SlicePartition(NewBvhPrimitiveSortable(
+                    buildData, splitAxis, comparator,
+                ))
+            }
+        }
     }
 
-    iHalf := len(newPrimitives) / 2
-    leftNode := NewBvhSub(bvh, newPrimitives[:iHalf])
-    rightNode := NewBvhSub(bvh, newPrimitives[iHalf:])
-
-    node := NewForkNode(leftNode, rightNode, bbox)
+    leftNode := NewBvhSub(bvh, buildData[:splitPos])
+    rightNode := NewBvhSub(bvh, buildData[splitPos:])
+    node := NewForkNode(leftNode, rightNode, bounds)
     bvh.nodes = append(bvh.nodes, node)
     return node
 }

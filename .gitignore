@@ -3,3 +3,5 @@ main
 *.coverprofile
 *.jpg
 *.prof
+
+!results/*.jpg

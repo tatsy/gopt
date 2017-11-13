@@ -1,5 +1,9 @@
 package core
 
+import (
+    "fmt"
+)
+
 type Color struct {
     R, G, B Float
 }
@@ -11,6 +15,16 @@ func NewColor(r, g, b Float) *Color {
     c.B = b
     return c
 }
+
+func NewColorWithString(s string) *Color {
+    var r, g, b Float
+    n, _ := fmt.Sscanf(s, "(%f, %f, %f)", &r, &g, &b)
+    if n != 3 {
+        panic(fmt.Sprintf("Failed to parse Vector3d: %s", s))
+    }
+    return &Color{r, g, b}
+}
+
 
 func (c *Color) Y() Float {
     return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B

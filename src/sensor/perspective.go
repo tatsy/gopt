@@ -7,7 +7,7 @@ import (
 
 type PerspectiveSensor struct {
     center, unitU, unitV, unitW *Vector3d
-    fov, aspect, nearClip, farClip Float
+    fov, aspect, focusDistance, nearClip, farClip Float
     film *Film
 }
 
@@ -17,6 +17,7 @@ func NewPerspectiveSensor(
     up *Vector3d,
     fov Float,
     aspect Float,
+    focusDistance Float,
     nearClip Float,
     farClip Float,
     film *Film) *PerspectiveSensor {
@@ -28,6 +29,7 @@ func NewPerspectiveSensor(
     sensor.unitW = to.Normalized()
     sensor.fov = fov
     sensor.aspect = aspect
+    sensor.focusDistance = focusDistance
     sensor.nearClip = nearClip
     sensor.farClip = farClip
     sensor.film = film
@@ -45,12 +47,12 @@ func (sensor *PerspectiveSensor) SpawnRay(x, y Float) *Ray {
     u := (x / Float(width)) - 0.5
     v := (y / Float(height)) - 0.5
 
-    screenHeight := 2.0 * math.Tan(sensor.fov * 0.5) * sensor.nearClip
+    screenHeight := 2.0 * math.Tan(sensor.fov * 0.5) * sensor.focusDistance
     screenWidth := sensor.aspect * screenHeight
 
     targetX := u * screenWidth
     targetY := v * screenHeight
-    targetZ := sensor.nearClip
+    targetZ := sensor.farClip
     direction := sensor.unitU.Scale(targetX).
                  Add(sensor.unitV.Scale(targetY)).
                  Add(sensor.unitW.Scale(targetZ)).

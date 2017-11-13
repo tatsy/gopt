@@ -65,7 +65,6 @@ func main() {
         os.Exit(0)
     }
 
-
     // File info
     absPath, _ := filepath.Abs(jsonFile)
     absDir := filepath.Dir(absPath)
@@ -99,6 +98,8 @@ func main() {
                 }
             }
         case "light":
+            meshes := make([]*Primitive, 0)
+            isDone := false
             for _, par := range obj.Params {
                 if par.Name == "obj" {
                     fileName := filepath.Join(absDir, par.Value)
@@ -106,14 +107,24 @@ func main() {
                     if !triMesh.Load(fileName) {
                         panic("Failed to load light file!")
                     }
+                    meshes = append(meshes, triMesh.Primitives...)
+                }
+            }
 
-                    Le := NewColor(8.0, 8.0, 8.0)
-                    for _, p := range triMesh.Primitives {
+            for _, par := range obj.Params {
+                if par.Name == "radiance" {
+                    if isDone {
+                        panic("Multiple \"radiance\" is specified to single light!")
+                    }
+
+                    Le := NewColorWithString(par.Value)
+                    for _, p := range meshes {
                         area := NewAreaLight(p.Shape(), Le)
                         p.SetLight(area)
                         lights = append(lights, area)
                         primitives = append(primitives, p)
                     }
+                    isDone = true
                 }
             }
         default:

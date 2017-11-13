@@ -61,13 +61,12 @@ func (b *Bounds3d) MaxExtent() int {
 func (b *Bounds3d) Intersect(ray *Ray, tNear *Float, tFar *Float) bool {
     t0 := 0.0
     t1 := ray.MaxDist
-    invDir := ray.InvDir()
 
     var tt0, tt1 Float
 
     // X
-    tt0 = (b.MinPos.X - ray.Org.X) * invDir.X
-    tt1 = (b.MaxPos.X - ray.Org.X) * invDir.X
+    tt0 = (b.MinPos.X - ray.Org.X) * ray.InvDir.X
+    tt1 = (b.MaxPos.X - ray.Org.X) * ray.InvDir.X
     if tt0 > tt1 { tt0, tt1 = tt1, tt0 }
 
     t0 = math.Max(t0, tt0)
@@ -75,8 +74,8 @@ func (b *Bounds3d) Intersect(ray *Ray, tNear *Float, tFar *Float) bool {
     if t0 > t1 { return false }
 
     // Y
-    tt0 = (b.MinPos.Y - ray.Org.Y) * invDir.Y
-    tt1 = (b.MaxPos.Y - ray.Org.Y) * invDir.Y
+    tt0 = (b.MinPos.Y - ray.Org.Y) * ray.InvDir.Y
+    tt1 = (b.MaxPos.Y - ray.Org.Y) * ray.InvDir.Y
     if tt0 > tt1 { tt0, tt1 = tt1, tt0 }
 
     t0 = math.Max(t0, tt0)
@@ -84,8 +83,8 @@ func (b *Bounds3d) Intersect(ray *Ray, tNear *Float, tFar *Float) bool {
     if t0 > t1 { return false }
 
     // Z
-    tt0 = (b.MinPos.Z - ray.Org.Z) * invDir.Z
-    tt1 = (b.MaxPos.Z - ray.Org.Z) * invDir.Z
+    tt0 = (b.MinPos.Z - ray.Org.Z) * ray.InvDir.Z
+    tt1 = (b.MaxPos.Z - ray.Org.Z) * ray.InvDir.Z
     if tt0 > tt1 { tt0, tt1 = tt1, tt0 }
 
     t0 = math.Max(t0, tt0)

@@ -15,6 +15,7 @@ func NewSensor(params *RenderParams, film *Film) Sensor {
             params.GetVector3d("sensor.up"),  // Up
             params.GetFloat("sensor.fov"),  // Fov
             film.Aspect(),  // Aspect
+            params.GetFloat("sensor.focus-distance"),  // Focus distance
             params.GetFloat("sensor.near-clip"),  // Near clip
             params.GetFloat("sensor.far-clip"),  // Far clip
             film,

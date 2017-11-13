@@ -7,15 +7,17 @@ import (
 type Ray struct {
     Org *Vector3d
     Dir *Vector3d
+    InvDir *Vector3d
     MaxDist Float
 }
 
 func NewRay(org *Vector3d, dir *Vector3d) *Ray {
-    return &Ray{
-        Org: org,
-        Dir: dir,
-        MaxDist: Infinity,
-    }
+    r := &Ray{}
+    r.Org = org
+    r.Dir = dir
+    r.MaxDist = Infinity
+    r.InvDir = InvertDir(r.Dir)
+    return r
 }
 
 func NewRayBetweenPoints(origin, target *Vector3d) *Ray {
@@ -26,6 +28,7 @@ func NewRayBetweenPoints(origin, target *Vector3d) *Ray {
     ray := &Ray{}
     ray.Org = origin.Add(dir.Scale(Eps))
     ray.Dir = dir
+    ray.InvDir = InvertDir(dir)
     ray.MaxDist = dist - 2.0 * Eps
     return ray
 }
@@ -34,28 +37,29 @@ func (ray *Ray) Clone() *Ray {
     return &Ray{
         Org: ray.Org,
         Dir: ray.Dir,
+        InvDir: ray.InvDir,
         MaxDist: ray.MaxDist,
     }
 }
 
-func (r *Ray) InvDir() *Vector3d {
+func InvertDir(v *Vector3d) *Vector3d {
     d := &Vector3d{}
-    if (math.Abs(r.Dir.X) > Eps) {
-        d.X = 1.0 / r.Dir.X
+    if (math.Abs(v.X) > Eps) {
+        d.X = 1.0 / v.X
     } else {
-        d.X = Infinity * Sign(r.Dir.X)
+        d.X = Infinity * Sign(v.X)
     }
 
-    if (math.Abs(r.Dir.Y) > Eps) {
-        d.Y = 1.0 / r.Dir.Y
+    if (math.Abs(v.Y) > Eps) {
+        d.Y = 1.0 / v.Y
     } else {
-        d.Y = Infinity * Sign(r.Dir.Y)
+        d.Y = Infinity * Sign(v.Y)
     }
 
-    if (math.Abs(r.Dir.Z) > Eps) {
-        d.Z = 1.0 / r.Dir.Z
+    if (math.Abs(v.Z) > Eps) {
+        d.Z = 1.0 / v.Z
     } else {
-        d.Z = Infinity * Sign(r.Dir.Z)
+        d.Z = Infinity * Sign(v.Z)
     }
     return d
 }

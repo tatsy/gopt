@@ -1,0 +1,49 @@
+[
+	{
+		"name": "image",
+		"parameters": [
+			{"name": "width", "value": "512"},
+			{"name": "height", "value": "512"}
+		]
+	},
+	{
+		"name": "integrator",
+		"parameters": [
+			{"name": "type", "value": "path"},
+			{"name": "max-bounces", "value": "16"},
+			{"name": "num-samples", "value": "64"}
+		]
+	},
+	{
+		"name": "sensor",
+		"parameters": [
+			{"name": "type", "value": "perspective"},
+			{"name": "center", "value": "(278, 273, -800)"},
+			{"name": "target", "value": "(278, 273, -799)"},
+			{"name": "up", "value": "(0, 1, 0)"},
+			{"name": "fov", "value": "39.3077"},
+			{"name": "focus-distance", "value": "1000.0"},
+			{"name": "near-clip", "value": "10"},
+			{"name": "far-clip", "value": "2800"}
+		]
+	},
+	{
+		"name": "sampler",
+		"parameters": [
+			{"name": "type", "value": "independent"}
+		]
+	},
+	{
+		"name": "shape",
+		"parameters": [
+			{"name": "obj", "value": "cbox_objects.obj"}
+		]
+	},
+	{
+		"name": "light",
+		"parameters": [
+			{"name": "radiance", "value": "(16.0, 16.0, 16.0)"},
+			{"name": "obj", "value": "cbox_luminaire.obj"}
+		]
+	}
+]

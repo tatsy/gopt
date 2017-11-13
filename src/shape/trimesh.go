@@ -46,6 +46,7 @@ func (triMesh *TriMesh) Load(filename string) bool {
     // Read file content
     var positions []*Vector3d
     var normals []*Vector3d
+    var texCoords []*Vector2d
     var primitives []*Primitive
     for scanner.Scan() {
         line := scanner.Text()
@@ -70,17 +71,51 @@ func (triMesh *TriMesh) Load(filename string) bool {
             normals = append(normals, NewVector3d(nx, ny, nz))
 
         case "vt":
-            continue
+            tx, _ := strconv.ParseFloat(items[1], 64)
+            ty, _ := strconv.ParseFloat(items[2], 64)
+            texCoords = append(texCoords, NewVector2d(tx, ty))
 
         case "f":
-            var i, ni, j, nj, k, nk int
-            fmt.Sscanf(items[1], "%d//%d", &i, &ni)
-            fmt.Sscanf(items[2], "%d//%d", &j, &nj)
-            fmt.Sscanf(items[3], "%d//%d", &k, &nk)
-            triangle := NewTriangle(
-                [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
-                [3]*Vector3d{normals[ni - 1], normals[nj - 1], normals[nk - 1]},
-            )
+            var i, ti, ni, j, tj, nj, k, tk, nk int
+            if len(items) >= 5 {
+                panic(fmt.Sprintf("Only triangle mesh is supported: %v", items))
+            }
+
+            ParseFace(items[1], &i, &ti, &ni)
+            ParseFace(items[2], &j, &tj, &nj)
+            ParseFace(items[3], &k, &tk, &nk)
+
+            var triangle *Triangle
+            if i >= 1 && j >= 1 && k >= 1 {
+                if ti >= 1 && tj >= 1 && tk >= 1 {
+                    if ni >= 1 && nj >= 1 && nk >= 1 {
+                        triangle = NewTriangleWithPTN(
+                            [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
+                            [3]*Vector2d{texCoords[ti - 1], texCoords[nj - 1], texCoords[nk - 1]},
+                            [3]*Vector3d{normals[ni - 1], normals[nj - 1], normals[nk - 1]},
+                        )
+                    } else {
+                        triangle = NewTriangleWithPT(
+                            [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
+                            [3]*Vector2d{texCoords[ti - 1], texCoords[nj - 1], texCoords[nk - 1]},
+                        )
+                    }
+                } else if ni >= 1 && nj >= 1 && nk >= 1 {
+                    triangle = NewTriangleWithPN(
+                        [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
+                        [3]*Vector3d{normals[ni - 1], normals[nj - 1], normals[nk - 1]},
+                    )
+                } else {
+                    triangle = NewTriangleWithP(
+                        [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
+                    )
+                }
+            }
+
+            if triangle == nil {
+                panic("Failed to parse triangle!")
+            }
+
             primitives = append(primitives, NewPrimitive(triangle, currentMat))
 
         case "usemtl":
@@ -98,6 +133,24 @@ func (triMesh *TriMesh) Load(filename string) bool {
 
     triMesh.Primitives = primitives
     return true
+}
+
+func ParseFace(item string, i, ti, ni *int) {
+    var n int
+    *i, *ti, *ni = -1, -1, -1
+    n, _ = fmt.Sscan(item, "%d/%d/%d", i, ti, ni)
+    if n != 3 {
+        n, _ = fmt.Sscanf(item, "%d/%d", i, ti)
+        if n != 2 {
+            n, _ = fmt.Sscanf(item, "%d//%d", i, ni)
+            if n != 2 {
+                n, _ = fmt.Sscanf(item, "%d", i)
+                if n != 1 {
+                    panic(fmt.Sprintf("Face format is invalid: %s", item))
+                }
+            }
+        }
+    }
 }
 
 func IsIgnorableLine(line string) bool {
@@ -147,6 +200,10 @@ func LoadMaterial(filename string) map[string]Bxdf {
             b, _ := strconv.ParseFloat(items[3], 64)
             Kd = NewColor(r, g, b)
         }
+    }
+
+    if currentName != "" {
+        materials[currentName] = NewLambertReflection(Kd)
     }
 
     return materials

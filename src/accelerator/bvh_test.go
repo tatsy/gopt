@@ -87,7 +87,7 @@ func TestPartition(t *testing.T) {
 }
 
 func TestBvhIntersection(t *testing.T) {
-    triMesh := NewTriMeshFromFile("../../data/gopher.obj")
+    triMesh := NewTriMeshFromFile("../../data/gopher/gopher.obj")
     bvh := NewBvh(triMesh.Primitives)
 
     numTrials := 1000

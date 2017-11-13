@@ -6,16 +6,11 @@ import (
 )
 
 func TestTriangleIntersect(t *testing.T) {
-    tri := NewTriangle(
+    tri := NewTriangleWithP(
         [3]*Vector3d{
             NewVector3d(0.0, 0.0, 0.0),
             NewVector3d(0.0, 1.0, 0.0),
             NewVector3d(1.0, 0.0, 0.0),
-        },
-        [3]*Vector3d{
-            NewVector3d(0.0, 0.0, 1.0),
-            NewVector3d(0.0, 0.0, 1.0),
-            NewVector3d(0.0, 0.0, 1.0),
         },
     )
     r1 := NewRay(

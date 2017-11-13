@@ -16,7 +16,15 @@ go build ./src/main.go
 
 ## Result
 
+#### Gopher
+
 <img src="./results/gopher.jpg" alt="gopher.jpg" width="500"/>
+
+#### Cornell box
+
+<img src="./results/cbox.jpg" alt="cbox.jpg" width="500"/>
+
+The scene courtesy of Mitsuba renderer (W. Jakob 2010).
 
 ## Copyright
 

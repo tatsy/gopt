@@ -2,8 +2,8 @@
   {
     "name": "image",
     "parameters": [
-      {"name": "width", "value": "640"},
-      {"name": "height", "value": "360"}
+      {"name": "width", "value": "1280"},
+      {"name": "height", "value": "720"}
     ]
   },
   {
@@ -11,7 +11,7 @@
     "parameters": [
       {"name": "type", "value": "path"},
       {"name": "max-bounces", "value": "16"},
-      {"name": "num-samples", "value": "32"}
+      {"name": "num-samples", "value": "128"}
     ]
   },
   {
@@ -22,6 +22,7 @@
       {"name": "target", "value": "(0.0, 2.0, 0.0)"},
       {"name": "up", "value": "(0.0, 1.0, 0.0)"},
       {"name": "fov", "value": "45.0"},
+      {"name": "focus-distance", "value": "1.0"},
       {"name": "near-clip", "value": "0.1"},
       {"name": "far-clip", "value": "1000.0"}
     ]
@@ -42,6 +43,7 @@
   {
     "name": "light",
     "parameters": [
+      {"name": "radiance", "value": "(4.0, 4.0, 4.0)"},
       {"name": "obj", "value": "sphere.obj"}
     ]
   }

@@ -4,4 +4,7 @@ main
 *.jpg
 *.prof
 
+*.mayaSwatches
+*.mb
+
 !results/*.jpg

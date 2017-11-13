@@ -93,11 +93,15 @@ func (integrator *PathIntegrator) Li(scene *Scene, r *Ray, sampler Sampler, maxB
             beta = beta.Scale(1.0 / continueProbability)
         }
     }
-
     return L
 }
 
 func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Color {
+    if len(scene.Lights) == 0 {
+        fmt.Println("Warning: No light exists!")
+        return NewColor(0.0, 0.0, 0.0)
+    }
+
     numLights := len(scene.Lights)
     lightId := int(sampler.Get1D() * Float(numLights))
     light := scene.Lights[lightId]

@@ -14,6 +14,15 @@ func NewVector3d(x, y, z Float) *Vector3d {
     return ret
 }
 
+func NewVector3dWithString(s string) *Vector3d {
+    var x, y, z Float
+    n, _ := fmt.Sscanf(s, "(%f, %f, %f)", &x, &y, &z)
+    if n != 3 {
+        panic(fmt.Sprintf("Failed to parse Vector3d: %s", s))
+    }
+    return &Vector3d{x, y, z}
+}
+
 func (v1 *Vector3d) Add(v2 *Vector3d) *Vector3d {
     ret := &Vector3d{}
     ret.X = v1.X + v2.X

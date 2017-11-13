@@ -8,12 +8,56 @@ import (
 type Triangle struct {
     Points [3]*Vector3d
     Normals [3]*Vector3d
+    TexCoords [3]*Vector2d
 }
 
-func NewTriangle(points, normals [3]*Vector3d) *Triangle {
+func NewTriangleWithP(points [3]*Vector3d) *Triangle {
+    t := &Triangle{}
+    t.Points = points
+
+    e1 := t.Points[1].Subtract(t.Points[0])
+    e2 := t.Points[2].Subtract(t.Points[0])
+    normal := e2.Cross(e1).Normalized()
+    t.Normals = [3]*Vector3d{normal, normal, normal}
+
+    t.TexCoords = [3]*Vector2d{
+        NewVector2d(0.0, 0.0),
+        NewVector2d(0.0, 0.0),
+        NewVector2d(0.0, 0.0),
+    }
+    return t
+}
+
+func NewTriangleWithPT(points [3]*Vector3d, texCoords [3]*Vector2d) *Triangle {
+    t := &Triangle{}
+    t.Points = points
+
+    e1 := t.Points[1].Subtract(t.Points[0])
+    e2 := t.Points[2].Subtract(t.Points[0])
+    normal := e1.Cross(e2).Normalized()
+    t.Normals = [3]*Vector3d{normal, normal, normal}
+
+    t.TexCoords = texCoords
+    return t
+}
+
+func NewTriangleWithPN(points, normals [3]*Vector3d) *Triangle {
     t := &Triangle{}
     t.Points = points
     t.Normals = normals
+    t.TexCoords = [3]*Vector2d{
+        NewVector2d(0.0, 0.0),
+        NewVector2d(0.0, 0.0),
+        NewVector2d(0.0, 0.0),
+    }
+    return t
+}
+
+func NewTriangleWithPTN(points [3]*Vector3d, texCoords [3]*Vector2d, normals [3]*Vector3d) *Triangle {
+    t := &Triangle{}
+    t.Points = points
+    t.Normals = normals
+    t.TexCoords = texCoords
     return t
 }
 

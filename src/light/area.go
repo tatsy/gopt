@@ -25,8 +25,8 @@ func (l *AreaLight) SampleLi(isect *Intersection, u *Point2d) (*Color, *Vector3d
     distSquared := wi.LengthSquared()
 
     wi = wi.Normalized()
-    dot0 := math.Abs(wi.Dot(isect.Normal))
-    dot1 := math.Abs(wi.Dot(normal))
+    dot0 := math.Max(0.0, wi.Dot(isect.Normal))
+    dot1 := math.Max(0.0, -wi.Dot(normal))
 
     Le := l.radiance.Scale(dot0 * dot1 / distSquared)
     return Le, wi, pdf, vt

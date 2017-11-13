@@ -28,6 +28,7 @@ func (triMesh *TriMesh) NumFaces() int {
 
 func (triMesh *TriMesh) Load(filename string) bool {
     // Open file
+    fmt.Printf("Load: %s\n", filename)
     handler, err := os.OpenFile(filename, os.O_RDONLY, 0600)
     defer handler.Close()
     if err != nil {
@@ -91,13 +92,13 @@ func (triMesh *TriMesh) Load(filename string) bool {
                     if ni >= 1 && nj >= 1 && nk >= 1 {
                         triangle = NewTriangleWithPTN(
                             [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
-                            [3]*Vector2d{texCoords[ti - 1], texCoords[nj - 1], texCoords[nk - 1]},
+                            [3]*Vector2d{texCoords[ti - 1], texCoords[tj - 1], texCoords[tk - 1]},
                             [3]*Vector3d{normals[ni - 1], normals[nj - 1], normals[nk - 1]},
                         )
                     } else {
                         triangle = NewTriangleWithPT(
                             [3]*Vector3d{positions[i - 1], positions[j - 1], positions[k - 1]},
-                            [3]*Vector2d{texCoords[ti - 1], texCoords[nj - 1], texCoords[nk - 1]},
+                            [3]*Vector2d{texCoords[ti - 1], texCoords[tj - 1], texCoords[tk - 1]},
                         )
                     }
                 } else if ni >= 1 && nj >= 1 && nk >= 1 {
@@ -116,13 +117,17 @@ func (triMesh *TriMesh) Load(filename string) bool {
                 panic("Failed to parse triangle!")
             }
 
+            if currentMat == nil {
+                panic("Material is nil")
+            }
             primitives = append(primitives, NewPrimitive(triangle, currentMat))
 
         case "usemtl":
             mat, isFound := materials[items[1]]
-            if isFound {
-                currentMat = mat
+            if mat == nil || !isFound {
+                panic(fmt.Sprintf("Material not found: %s", items[1]))
             }
+            currentMat = mat
 
         case "mtllib":
             absName, _ := filepath.Abs(filename)
@@ -180,6 +185,8 @@ func LoadMaterial(filename string) map[string]Bxdf {
     materials := make(map[string]Bxdf)
     currentName := ""
     Kd := NewColor(0.5, 0.5, 0.5)
+    Ks := NewColor(0.0, 0.0, 0.0)
+    eta := 0.0
     for scanner.Scan() {
         line := scanner.Text()
         if IsIgnorableLine(line) {
@@ -190,21 +197,48 @@ func LoadMaterial(filename string) map[string]Bxdf {
         switch {
         case items[0] == "newmtl":
             if currentName != "" {
-                materials[currentName] = NewLambertReflection(Kd)
+                materials[currentName] = NewBxdf(Kd, Ks, eta)
             }
             currentName = items[1]
+            Kd = NewColor(0.5, 0.5, 0.5)
+            Ks = NewColor(0.0, 0.0, 0.0)
+            eta = 0.0
 
         case items[0] == "Kd":
             r, _ := strconv.ParseFloat(items[1], 64)
             g, _ := strconv.ParseFloat(items[2], 64)
             b, _ := strconv.ParseFloat(items[3], 64)
             Kd = NewColor(r, g, b)
+
+        case items[0] == "Ks":
+            r, _ := strconv.ParseFloat(items[1], 64)
+            g, _ := strconv.ParseFloat(items[2], 64)
+            b, _ := strconv.ParseFloat(items[3], 64)
+            Ks = NewColor(r, g, b)
+
+        case items[0] == "Ni":
+            eta, _ = strconv.ParseFloat(items[1], 64)
         }
     }
 
     if currentName != "" {
-        materials[currentName] = NewLambertReflection(Kd)
+        materials[currentName] = NewBxdf(Kd, Ks, eta)
     }
 
     return materials
+}
+
+func NewBxdf(Kd, Ks *Color, eta Float) Bxdf {
+    switch {
+    case eta != 0.0:
+        return NewSpecularFresnel(Ks, Ks, 1.0, eta)
+    case !Kd.IsBlack() && !Ks.IsBlack():
+        return NewLambertReflection(Kd)
+    case !Kd.IsBlack():
+        return NewLambertReflection(Kd)
+    case !Ks.IsBlack():
+        return NewSpecularReflection(Ks)
+    default:
+        return nil
+    }
 }

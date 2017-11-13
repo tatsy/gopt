@@ -80,7 +80,7 @@ func (integrator *PathIntegrator) Li(scene *Scene, r *Ray, sampler Sampler, maxB
             break
         }
 
-        beta = beta.Multiply(f).Scale(wi.Dot(isect.Normal) / pdf)
+        beta = beta.Multiply(f).Scale(math.Abs(wi.Dot(isect.Normal)) / pdf)
         specularBounce = (bsdfType & BSDF_SPECULAR) != 0
         ray = isect.SpawnRay(wi)
 

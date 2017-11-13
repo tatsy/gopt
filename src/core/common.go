@@ -2,6 +2,7 @@ package core
 
 import (
     "fmt"
+    "math"
     "strings"
 )
 
@@ -19,6 +20,10 @@ func Sign(x Float) Float {
         return -1.0
     }
     return 1.0
+}
+
+func Clamp(x, lower, upper Float) Float {
+    return math.Max(lower, math.Min(x, upper))
 }
 
 func ProgressBar(x, maxVal int) {

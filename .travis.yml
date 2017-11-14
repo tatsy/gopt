@@ -11,8 +11,7 @@ before_install:
   - go get github.com/modocache/gover
 
 install:
-  - export GOPATH=$TRAVIS_BUILD_DIR
-  - go build ./...
+  - go install ./...
 
 script:
   - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/.coverprofile {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c

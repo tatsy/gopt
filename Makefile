@@ -1,10 +1,8 @@
-export GOPATH = $(PWD)
-
 all:
 	go build ./...
 
 run:
-	go build ./src/main.go && ./main ${ARGS}
+	go build ./main.go && ./main ${ARGS}
 
 test:
 	go test ./... --cover -v

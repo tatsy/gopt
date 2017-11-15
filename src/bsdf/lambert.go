@@ -21,7 +21,10 @@ func (f *LambertReflection) Eval(wi, wo *Vector3d) *Color {
 }
 
 func (f *LambertReflection) Pdf(wi, wo *Vector3d) Float {
-	return 1.0
+	if SameHemisphere(wi, wo) {
+		return AbsCosTheta(wi) / math.Pi
+	}
+	return 0.0
 }
 
 func (f *LambertReflection) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float) {

@@ -5,26 +5,32 @@ import (
 	"math"
 )
 
+// Vector3d is a 3D vector.
 type Vector3d struct {
 	X, Y, Z Float
 }
 
+// NewVector3d creates a new vector with specified coordinates.
 func NewVector3d(x, y, z Float) *Vector3d {
-	ret := &Vector3d{x, y, z}
+	ret := new(Vector3d)
+	ret.X = x
+	ret.Y = y
+	ret.Z = z
 	return ret
 }
 
+// NewVector3dWithString parses a string, and returns a parsed vector.
 func NewVector3dWithString(s string) *Vector3d {
 	var x, y, z Float
 	n, _ := fmt.Sscanf(s, "(%f, %f, %f)", &x, &y, &z)
 	if n != 3 {
 		panic(fmt.Sprintf("Failed to parse Vector3d: %s", s))
 	}
-	return &Vector3d{x, y, z}
+	return NewVector3d(x, y, z)
 }
 
 func (v1 *Vector3d) Add(v2 *Vector3d) *Vector3d {
-	ret := &Vector3d{}
+	ret := new(Vector3d)
 	ret.X = v1.X + v2.X
 	ret.Y = v1.Y + v2.Y
 	ret.Z = v1.Z + v2.Z
@@ -32,7 +38,7 @@ func (v1 *Vector3d) Add(v2 *Vector3d) *Vector3d {
 }
 
 func (v *Vector3d) Negate() *Vector3d {
-	ret := &Vector3d{}
+	ret := new(Vector3d)
 	ret.X = -v.X
 	ret.Y = -v.Y
 	ret.Z = -v.Z
@@ -44,7 +50,7 @@ func (v1 *Vector3d) Subtract(v2 *Vector3d) *Vector3d {
 }
 
 func (v1 *Vector3d) Scale(s Float) *Vector3d {
-	ret := &Vector3d{}
+	ret := new(Vector3d)
 	ret.X = v1.X * s
 	ret.Y = v1.Y * s
 	ret.Z = v1.Z * s

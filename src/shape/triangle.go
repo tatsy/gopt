@@ -6,12 +6,15 @@ import (
 	. "github.com/tatsy/gopt/src/core"
 )
 
+// Triangle is a triangle which holds three positions,
+// normals and texture cooridnates.
 type Triangle struct {
 	Points    [3]*Vector3d
 	Normals   [3]*Vector3d
 	TexCoords [3]*Vector2d
 }
 
+// NewTriangleWithP create a triangle with three positions.
 func NewTriangleWithP(points [3]*Vector3d) *Triangle {
 	t := &Triangle{}
 	t.Points = points
@@ -99,7 +102,7 @@ func (t *Triangle) Intersect(ray *Ray, tHit *Float, isect *Intersection) bool {
 	return true
 }
 
-func (t *Triangle) SampleP(rnd *Vector2d) (*Vector3d, *Vector3d, Float) {
+func (t *Triangle) SamplePoint(rnd *Vector2d) (*Vector3d, *Vector3d) {
 	u, v := rnd.X, rnd.Y
 	if u+v >= 1.0 {
 		u = 1.0 - u
@@ -112,12 +115,27 @@ func (t *Triangle) SampleP(rnd *Vector2d) (*Vector3d, *Vector3d, Float) {
 	normal := t.Normals[0].Scale(1.0 - u - v).
 		Add(t.Normals[1].Scale(u)).
 		Add(t.Normals[2].Scale(v))
-	area := 0.5 * (t.Points[1].Subtract(t.Points[0])).Cross(t.Points[2].Subtract(t.Points[0])).Length()
-	pdf := 0.0
-	if area != 0.0 {
-		pdf = 1.0 / area
+
+	return pos, normal
+}
+
+func (t *Triangle) Pdf(isect *Intersection, wi *Vector3d) Float {
+	ray := NewRay(isect.Pos, wi)
+	var tHit Float
+	var temp Intersection
+	if !t.Intersect(ray, &tHit, &temp) {
+		return 0.0
 	}
-	return pos, normal, pdf
+
+	dot := math.Max(0.0, -temp.Normal.Dot(ray.Dir))
+	dist2 := temp.Pos.Subtract(isect.Pos).LengthSquared()
+	return dist2 / (dot * t.Area())
+}
+
+func (t *Triangle) Area() Float {
+	e1 := t.Points[1].Subtract(t.Points[0])
+	e2 := t.Points[2].Subtract(t.Points[0])
+	return 0.5 * e1.Cross(e2).Length()
 }
 
 func (t *Triangle) Bounds() *Bounds3d {

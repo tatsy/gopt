@@ -6,7 +6,8 @@ type Accelerator interface {
 
 type Shape interface {
 	Intersect(ray *Ray, tHit *Float, isect *Intersection) bool
-	SampleP(u *Vector2d) (*Vector3d, *Vector3d, Float)
+	SamplePoint(u *Vector2d) (*Vector3d, *Vector3d)
+	Pdf(isect *Intersection, wi *Vector3d) Float
 	Bounds() *Bounds3d
 }
 
@@ -32,4 +33,5 @@ type Light interface {
 	Le() *Color
 	LeWithRay(ray *Ray) *Color
 	SampleLi(isect *Intersection, u *Vector2d) (*Color, *Vector3d, Float, *VisibilityTester)
+	PdfLi(isect *Intersection, wi *Vector3d) Float
 }

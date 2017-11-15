@@ -32,16 +32,26 @@ func TestVector3dInistance(t *testing.T) {
 }
 
 func TestVector3dConstructWithString(t *testing.T) {
-	testCases := map[string][3]Float{
+	testCases := map[string][]Float{
 		"(1, 2, 3)":    {1.0, 2.0, 3.0},
 		"(0, 0, 0)":    {0.0, 0.0, 0.0},
 		"(-1, -2, -3)": {-1.0, -2.0, -3.0},
+		"(-1, -2, A)":  {},
 	}
 
 	for s, vec := range testCases {
-		v := NewVector3dWithString(s)
-		if v.X != vec[0] || v.Y != vec[1] || v.Z != vec[2] {
-			t.Errorf("%s converted to %v", s, v)
+		if len(vec) != 0 {
+			v := NewVector3dWithString(s)
+			if v.X != vec[0] || v.Y != vec[1] || v.Z != vec[2] {
+				t.Errorf("%s converted to %v", s, v)
+			}
+		} else {
+			defer func() {
+				if p := recover(); p != nil {
+				}
+			}()
+			NewVector3dWithString(s)
+			t.Errorf("String \"%s\" must not be parsed.", s)
 		}
 	}
 }

@@ -32,7 +32,19 @@ func (bsdf *Bsdf) Eval(wi, wo *Vector3d) *Color {
 	zLocal = bsdf.ns.Dot(wo)
 	woLocal := NewVector3d(xLocal, yLocal, zLocal)
 	return bsdf.bxdf.Eval(wiLocal, woLocal)
+}
 
+func (bsdf *Bsdf) Pdf(wi, wo *Vector3d) Float {
+	var xLocal, yLocal, zLocal Float
+	xLocal = bsdf.ts.Dot(wi)
+	yLocal = bsdf.bs.Dot(wi)
+	zLocal = bsdf.ns.Dot(wi)
+	wiLocal := NewVector3d(xLocal, yLocal, zLocal)
+	xLocal = bsdf.ts.Dot(wo)
+	yLocal = bsdf.bs.Dot(wo)
+	zLocal = bsdf.ns.Dot(wo)
+	woLocal := NewVector3d(xLocal, yLocal, zLocal)
+	return bsdf.bxdf.Pdf(wiLocal, woLocal)
 }
 
 func (bsdf *Bsdf) SampleWi(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, int) {

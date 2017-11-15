@@ -105,19 +105,55 @@ func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Co
 		return NewColor(0.0, 0.0, 0.0)
 	}
 
+	Ld := NewColor(0.0, 0.0, 0.0)
+	lightPdf, bsdfPdf := 0.0, 0.0
+
+	// Light sampling
 	numLights := len(scene.Lights)
-	lightId := int(sampler.Get1D() * Float(numLights))
-	light := scene.Lights[lightId]
+	lightID := int(sampler.Get1D() * Float(numLights))
+	light := scene.Lights[lightID]
 
-	Li, wi, pdf, vis := light.SampleLi(isect, sampler.Get2D())
-	if pdf == 0.0 {
-		return NewColor(0.0, 0.0, 0.0)
+	Li, wi, lightPdf, vis := light.SampleLi(isect, sampler.Get2D())
+	if !Li.IsBlack() && lightPdf > 0.0 && vis.Unoccluded(scene) {
+		bsdfPdf = isect.Bsdf().Pdf(wi, isect.Wo)
+		weight := lightPdf / (lightPdf + bsdfPdf)
+		f := isect.Bsdf().Eval(wi, isect.Wo).Scale(math.Abs(isect.Normal.Dot(wi)))
+		L := f.Multiply(Li).Scale(weight / lightPdf)
+		Ld = Ld.Add(L)
 	}
 
-	if !vis.Unoccluded(scene) {
-		return NewColor(0.0, 0.0, 0.0)
+	// BSDF sampling
+	lightPdf, bsdfPdf = 0.0, 0.0
+	f, wi, bsdfPdf, sampledType := isect.Bsdf().SampleWi(isect.Wo, sampler.Get2D())
+	if !f.IsBlack() && bsdfPdf > 0.0 {
+		sampledSpecular := (sampledType & BSDF_SPECULAR) != 0
+		f = f.Scale(math.Abs(isect.Normal.Dot(wi)))
+		weight := 1.0
+		if !sampledSpecular {
+			lightPdf = light.PdfLi(isect, wi)
+			if lightPdf <= 0.0 {
+				return Ld.Scale(Float(numLights))
+			}
+			weight = bsdfPdf / (bsdfPdf + lightPdf)
+		}
+
+		var testIsect Intersection
+		ray := NewRay(isect.Pos, wi)
+		isIntersect := scene.Intersect(ray, &testIsect)
+		Li := NewColor(0.0, 0.0, 0.0)
+		if isIntersect {
+			rr := testIsect.Le(ray.Dir.Negate())
+			Li = Li.Add(rr)
+		} else {
+			for _, l := range scene.Lights {
+				rr := l.LeWithRay(ray)
+				Li = Li.Add(rr)
+			}
+		}
+
+		L := f.Multiply(Li).Scale(weight / bsdfPdf)
+		Ld = Ld.Add(L)
 	}
 
-	f := isect.Bsdf().Eval(wi, isect.Wo).Scale(math.Abs(isect.Normal.Dot(wi)))
-	return f.Multiply(Li).Scale(1.0 / pdf).Scale(Float(numLights))
+	return Ld.Scale(Float(numLights))
 }

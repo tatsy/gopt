@@ -2,10 +2,11 @@ all:
 	go build ./...
 
 run:
-	go build ./main.go && ./main ${ARGS}
+	go run ./main.go ${ARGS}
 
 test:
-	go test ./... --cover -v
-
+	go test ./... -cover -v
+	
 clean:
+	go clean
 	rm -rf main *.jpg *.png *.prof

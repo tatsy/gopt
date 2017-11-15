@@ -3,6 +3,7 @@ main
 *.coverprofile
 *.jpg
 *.prof
+coverage.out
 
 *.mayaSwatches
 *.mb

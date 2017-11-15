@@ -36,8 +36,7 @@ func (s *BvhTestSotable) Check(i int) bool {
 }
 
 func TestNthElement(t *testing.T) {
-	numTrials := 100
-	for trial := 0; trial < numTrials; trial++ {
+	for trial := 0; trial < TestTrials; trial++ {
 		numElems := 100
 		values := make([]int, numElems)
 		for i := 0; i < numElems; i++ {
@@ -64,8 +63,7 @@ func TestNthElement(t *testing.T) {
 }
 
 func TestPartition(t *testing.T) {
-	numTrials := 100
-	for trial := 0; trial < numTrials; trial++ {
+	for trial := 0; trial < TestTrials; trial++ {
 		numElems := 100
 		values := make([]int, numElems)
 		for i := 0; i < numElems; i++ {
@@ -91,8 +89,7 @@ func TestBvhIntersection(t *testing.T) {
 	triMesh := NewTriMeshFromFile("../../data/gopher/gopher.obj")
 	bvh := NewBvh(triMesh.Primitives)
 
-	numTrials := 1000
-	for trial := 0; trial < numTrials; trial++ {
+	for trial := 0; trial < TestTrials; trial++ {
 		org := NewVector3d(
 			rand.Float64(),
 			rand.Float64(),

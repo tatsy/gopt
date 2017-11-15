@@ -85,12 +85,20 @@ func TestBounds3dCentroid(t *testing.T) {
 }
 
 func TestMaxExtent(t *testing.T) {
-	b1 := NewBounds3dMinMax(
-		NewVector3d(1.0, 2.0, 3.0),
-		NewVector3d(2.0, 4.0, 6.0),
-	)
+	testCases := map[[6]Float]int{
+		{-1.0, 2.0, 3.0, 4.0, 5.0, 6.0}: 0,
+		{1.0, -2.0, 3.0, 4.0, 5.0, 6.0}: 1,
+		{1.0, 2.0, -3.0, 4.0, 5.0, 6.0}: 2,
+	}
 
-	if b1.MaxExtent() != 2 {
-		t.Error("Max extent test is failed!")
+	for v, n := range testCases {
+		b := NewBounds3dMinMax(
+			NewVector3d(v[0], v[1], v[2]),
+			NewVector3d(v[3], v[4], v[5]),
+		)
+
+		if b.MaxExtent() != n {
+			t.Errorf("Max extent of %v != %d", b, n)
+		}
 	}
 }

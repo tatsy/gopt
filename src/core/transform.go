@@ -6,11 +6,11 @@ import (
 
 // Transform is a 4x4 transformation matrix.
 type Transform struct {
-	mat [16]Float // Matrix entries
+	mat [4][4]Float // Matrix entries
 }
 
 // NewTransform returns a pointer of the Transform.
-func NewTransform(mat [16]Float) *Transform {
+func NewTransform(mat [4][4]Float) *Transform {
 	t := new(Transform)
 	t.mat = mat
 	return t
@@ -24,11 +24,11 @@ func NewTransformWithElements(
 	m20, m21, m22, m23 Float,
 	m30, m31, m32, m33 Float) *Transform {
 	t := new(Transform)
-	t.mat = [...]Float{
-		m00, m01, m02, m03,
-		m10, m11, m12, m13,
-		m20, m21, m22, m23,
-		m30, m31, m32, m33,
+	t.mat = [4][4]Float{
+		{m00, m01, m02, m03},
+		{m10, m11, m12, m13},
+		{m20, m21, m22, m23},
+		{m30, m31, m32, m33},
 	}
 	return t
 }
@@ -50,8 +50,8 @@ func NewLookAt(origin, target, up *Vector3d) *Transform {
 	m33 := 1.0
 
 	dir := target.Subtract(origin).Normalized()
-	left := up.Cross(dir).Normalized()
-	newUp := dir.Cross(left)
+	left := dir.Cross(up).Normalized()
+	newUp := left.Cross(dir)
 
 	m00 := left.X
 	m10 := left.Y
@@ -76,14 +76,14 @@ func NewLookAt(origin, target, up *Vector3d) *Transform {
 
 // NewPerspective returns a pointer of the perspective Transform.
 func NewPerspective(fov, aspect, near, far Float) *Transform {
-	pers := [...]Float{
-		1.0 / aspect, 0.0, 0.0, 0.0,
-		0.0, 1.0, 0.0, 0.0,
-		0.0, 0.0, far / (far - near), -far * near / (far - near),
-		0.0, 0.0, 1.0, 0.0,
+	pers := [4][4]Float{
+		{1.0 / aspect, 0.0, 0.0, 0.0},
+		{0.0, 1.0, 0.0, 0.0},
+		{0.0, 0.0, far / (far - near), -far * near / (far - near)},
+		{0.0, 0.0, 1.0, 0.0},
 	}
-	invTanHalf := 1.0 / math.Tan(fov*0.5)
-	return NewScale(invTanHalf, invTanHalf, 1.0).Multiply(NewTransform(pers))
+	s := 1.0 / math.Tan(DegreeToRadian(fov)*0.5)
+	return NewScale(s, s, 1.0).Multiply(NewTransform(pers))
 }
 
 // Multiply computes the multiplications of Transforms.
@@ -91,13 +91,37 @@ func (t1 *Transform) Multiply(t2 *Transform) *Transform {
 	ret := new(Transform)
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			ret.mat[i*4+j] = 0.0
+			ret.mat[i][j] = 0.0
 			for k := 0; k < 4; k++ {
-				ret.mat[i*4+j] += t1.mat[i*4+k] * t2.mat[k*4+j]
+				ret.mat[i][j] += t1.mat[i][k] * t2.mat[k][j]
 			}
 		}
 	}
 	return ret
+}
+
+// Apply multiplies the transform to a vector.
+func (t *Transform) ApplyToP(v *Vector3d) *Vector3d {
+	u := [4]Float{v.X, v.Y, v.Z, 1.0}
+	ret := [4]Float{0.0, 0.0, 0.0, 0.0}
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			ret[i] += t.mat[i][j] * u[j]
+		}
+	}
+	return NewVector3d(ret[0], ret[1], ret[2]).Divide(ret[3])
+}
+
+// Apply multiplies the transform to a vector.
+func (t *Transform) ApplyToV(v *Vector3d) *Vector3d {
+	u := [3]Float{v.X, v.Y, v.Z}
+	ret := [3]Float{0.0, 0.0, 0.0}
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			ret[i] += t.mat[i][j] * u[j]
+		}
+	}
+	return NewVector3d(ret[0], ret[1], ret[2])
 }
 
 // Inverted returns a inverted Transform.
@@ -106,9 +130,11 @@ func (t *Transform) Inverted() *Transform {
 	indxr := make([]int, 4)
 	ipiv := [4]int{0, 0, 0, 0}
 
-	mInv := [16]Float{}
-	for i := 0; i < 16; i++ {
-		mInv[i] = t.mat[i]
+	mInv := [4][4]Float{}
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			mInv[i][j] = t.mat[i][j]
+		}
 	}
 
 	for i := 0; i < 4; i++ {
@@ -120,8 +146,8 @@ func (t *Transform) Inverted() *Transform {
 			if ipiv[j] != 1 {
 				for k := 0; k < 4; k++ {
 					if ipiv[k] == 0 {
-						if math.Abs(mInv[j*4+k]) >= big {
-							big = math.Abs(mInv[j*4+k])
+						if math.Abs(mInv[j][k]) >= big {
+							big = math.Abs(mInv[j][k])
 							irow = j
 							icol = k
 						}
@@ -136,29 +162,29 @@ func (t *Transform) Inverted() *Transform {
 		// Swap pivot row
 		if irow != icol {
 			for k := 0; k < 4; k++ {
-				mInv[irow*4+k], mInv[icol*4+k] = mInv[icol*4+k], mInv[irow*4+k]
+				mInv[irow][k], mInv[icol][k] = mInv[icol][k], mInv[irow][k]
 			}
 		}
 
 		indxr[i] = irow
 		indxc[i] = icol
-		if math.Abs(mInv[icol*4+icol]) < Eps {
+		if math.Abs(mInv[icol][icol]) < Eps {
 			panic("Singular matrix cannot be inverted")
 		}
 
-		pinv := 1.0 / mInv[icol*4+icol]
-		mInv[icol*4+icol] = 1.0
+		pinv := 1.0 / mInv[icol][icol]
+		mInv[icol][icol] = 1.0
 		for j := 0; j < 4; j++ {
-			mInv[icol*4+j] *= pinv
+			mInv[icol][j] *= pinv
 		}
 
 		// Subtract diagonal value from the other rows
 		for j := 0; j < 4; j++ {
 			if j != icol {
-				save := mInv[j*4+icol]
-				mInv[j*4+icol] = 0.0
+				save := mInv[j][icol]
+				mInv[j][icol] = 0.0
 				for k := 0; k < 4; k++ {
-					mInv[j*4+k] -= mInv[icol*4+k] * save
+					mInv[j][k] -= mInv[icol][k] * save
 				}
 			}
 		}
@@ -168,8 +194,8 @@ func (t *Transform) Inverted() *Transform {
 	for j := 3; j >= 0; j-- {
 		if indxr[j] != indxc[j] {
 			for k := 0; k < 4; k++ {
-				mInv[k*4+indxr[j]], mInv[k*4+indxc[j]] =
-					mInv[k*4+indxc[j]], mInv[k*4+indxr[j]]
+				mInv[k][indxr[j]], mInv[k][indxc[j]] =
+					mInv[k][indxc[j]], mInv[k][indxr[j]]
 			}
 		}
 	}

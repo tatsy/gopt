@@ -16,20 +16,22 @@ func (integrator *PathIntegrator) Render(scene *Scene, sensor Sensor, sampler Sa
 	numSamples := params.GetInt("integrator.num-samples")
 	maxBounces := params.GetInt("integrator.max-bounces")
 	film := sensor.Film()
-	sem := make(chan Semaphore, width)
+	sem := make(chan struct{}, width)
 
 	for s := 0; s < numSamples; s++ {
 		fmt.Printf("Sample (%d / %d):\n", s+1, numSamples)
 		for y := 0; y < height; y++ {
 			for x := 0; x < width; x++ {
 				go func(x, y int) {
-					subPos := sampler.Get2D()
+					seed := int64(s)*int64(width*height) + int64(y*width+x)
+					subSampler := sampler.Clone(seed)
+					subPos := subSampler.Get2D()
 					px := Float(x) + subPos.X
 					py := Float(y) + subPos.Y
-					ray := sensor.SpawnRay(px, py)
-					L := integrator.Li(scene, ray, sampler, maxBounces)
+					ray := sensor.SpawnRay(px, py, subSampler.Get2D())
+					L := integrator.Li(scene, ray, subSampler, maxBounces)
 					film.AddSample(px, py, L)
-					sem <- Semaphore{}
+					sem <- struct{}{}
 				}(x, y)
 			}
 
@@ -40,7 +42,7 @@ func (integrator *PathIntegrator) Render(scene *Scene, sensor Sensor, sampler Sa
 			ProgressBar(y+1, height)
 		}
 		fmt.Println()
-		film.Save("image.jpg")
+		film.Save(params.GetString("outfile"))
 	}
 }
 

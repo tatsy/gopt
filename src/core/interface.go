@@ -19,10 +19,11 @@ type Bxdf interface {
 
 type Sensor interface {
 	Film() *Film
-	SpawnRay(x, y Float) *Ray
+	SpawnRay(x, y Float, u *Vector2d) *Ray
 }
 
 type Sampler interface {
+	Clone(seed int64) Sampler
 	Get1D() Float
 	Get2D() *Vector2d
 }

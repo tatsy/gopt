@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"runtime/pprof"
+	"strings"
 
 	. "github.com/tatsy/gopt/src/accelerator"
 	. "github.com/tatsy/gopt/src/core"
@@ -58,17 +60,25 @@ func main() {
 
 	// Parse command line args
 	var jsonFile string
+	var numThreads int
 	flag.StringVar(&jsonFile, "input", "", "Input JSON file")
 	flag.StringVar(&jsonFile, "i", "", "Input JSON file")
+	flag.IntVar(&numThreads, "nthreads", -1, "Number of threads to use")
 	flag.Parse()
 	if jsonFile == "" {
 		flag.Usage()
 		os.Exit(0)
 	}
 
+	if numThreads > 0 {
+		runtime.GOMAXPROCS(numThreads)
+	}
+
 	// File info
 	absPath, _ := filepath.Abs(jsonFile)
-	absDir := filepath.Dir(absPath)
+	absDir, fileName := filepath.Split(absPath)
+	baseName := strings.TrimRight(fileName, filepath.Ext(fileName))
+	outFile := filepath.Join(absDir, baseName+".jpg")
 
 	// Parse JSON file
 	bytes, err := ioutil.ReadFile(jsonFile)
@@ -80,6 +90,7 @@ func main() {
 
 	// Parse objects, lights and parameters
 	params := NewRenderParams()
+	params.AddEntry("outfile", outFile)
 	var primitives []*Primitive
 	var lights []Light
 	for _, obj := range jsonObjects {
@@ -146,7 +157,7 @@ func main() {
 	film := NewFilm(imageWidth, imageHeight)
 	sensor := NewSensor(params, film)
 
-	sampler := &IndependentSampler{}
+	sampler := NewIndependentSampler()
 	integrator := PathIntegrator{}
 
 	timer := NewTimer()

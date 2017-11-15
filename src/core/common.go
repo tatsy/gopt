@@ -17,9 +17,6 @@ const (
 	Infinity = Float(1.0e20)
 )
 
-// Semaphore is used to manage for-loop parallelization.
-type Semaphore struct{}
-
 // Sign returns the sign of specified value.
 func Sign(x Float) Float {
 	if x < 0.0 {
@@ -31,6 +28,11 @@ func Sign(x Float) Float {
 // Clamp truncate the specified value so that it is in [lower, upper].
 func Clamp(x, lower, upper Float) Float {
 	return math.Max(lower, math.Min(x, upper))
+}
+
+// DegreeToRadian converts angle unit from degree to radian
+func DegreeToRadian(d Float) Float {
+	return math.Pi * d / 180.0
 }
 
 // ProgressBar prints out the progress bar on CUI.

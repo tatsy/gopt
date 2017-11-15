@@ -8,15 +8,18 @@ import (
 
 func NewSensor(params *RenderParams, film *Film) Sensor {
 	typeStr := params.GetString("sensor.type")
+	cameraToWorld := NewLookAt(
+		params.GetVector3d("sensor.center"),
+		params.GetVector3d("sensor.target"),
+		params.GetVector3d("sensor.up"),
+	)
 	switch typeStr {
 	case "perspective":
 		return NewPerspectiveSensor(
-			params.GetVector3d("sensor.center"),      // Center
-			params.GetVector3d("sensor.target"),      // Target
-			params.GetVector3d("sensor.up"),          // Up
-			params.GetFloat("sensor.fov"),            // Fov
-			film.Aspect(),                            // Aspect
+			cameraToWorld,
 			params.GetFloat("sensor.focus-distance"), // Focus distance
+			params.GetFloat("sensor.aperture-size"),  // Aperture size
+			params.GetFloat("sensor.fov"),            // Fov
 			params.GetFloat("sensor.near-clip"),      // Near clip
 			params.GetFloat("sensor.far-clip"),       // Far clip
 			film,

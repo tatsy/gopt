@@ -240,6 +240,6 @@ func NewBxdf(Kd, Ks *Color, eta Float) Bxdf {
 	case !Ks.IsBlack():
 		return NewSpecularReflection(Ks)
 	default:
-		return nil
+		return NewLambertReflection(Kd)
 	}
 }

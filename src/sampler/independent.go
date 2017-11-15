@@ -1,20 +1,31 @@
 package sampler
 
 import (
-	"math/rand"
-
 	. "github.com/tatsy/gopt/src/core"
 )
 
 // IndependentSampler generates pseudo random numbers
 // with Go's buildin random number generator.
 type IndependentSampler struct {
+	*Random
 }
 
-func (sampler *IndependentSampler) Get1D() Float {
-	return Float(rand.Float64())
+func NewIndependentSampler() *IndependentSampler {
+	s := new(IndependentSampler)
+	s.Random = NewRandom(0)
+	return s
 }
 
-func (sampler *IndependentSampler) Get2D() *Vector2d {
-	return NewVector2d(rand.Float64(), rand.Float64())
+func (*IndependentSampler) Clone(seed int64) Sampler {
+	s := new(IndependentSampler)
+	s.Random = NewRandom(seed)
+	return s
+}
+
+func (s *IndependentSampler) Get1D() Float {
+	return Float(s.Float64())
+}
+
+func (s *IndependentSampler) Get2D() *Vector2d {
+	return NewVector2d(s.Float64(), s.Float64())
 }

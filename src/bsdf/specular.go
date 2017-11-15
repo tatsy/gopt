@@ -24,7 +24,7 @@ func (f *SpecularReflection) Eval(wi, wo *Vector3d) *Color {
 
 func (f *SpecularReflection) Pdf(wi, wo *Vector3d) Float {
 	if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= 1.0-deltaEps {
-		return 1.0
+		return Infinity
 	}
 	return 0.0
 }
@@ -85,7 +85,7 @@ func (f *SpecularFresnel) Pdf(wi, wo *Vector3d) Float {
 	cosThetaI := CosTheta(wo)
 	F := FresnelDielectric(cosThetaI, f.etaA, f.etaB)
 	if SameHemisphere(wi, wo) {
-		if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= 1.0-deltaEps {
+		if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= (1.0 - deltaEps) {
 			return F
 		}
 	} else {
@@ -101,7 +101,7 @@ func (f *SpecularFresnel) Pdf(wi, wo *Vector3d) Float {
 		}
 
 		wt, isRefract := Refract(wo, faceForwardNormal, etaI/etaT)
-		if isRefract && wt.Dot(wi) > 1.0-deltaEps {
+		if isRefract && (wt.Dot(wi) >= (1.0 - deltaEps)) {
 			return 1.0 - F
 		}
 	}

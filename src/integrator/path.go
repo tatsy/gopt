@@ -116,7 +116,7 @@ func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Co
 	Li, wi, lightPdf, vis := light.SampleLi(isect, sampler.Get2D())
 	if !Li.IsBlack() && lightPdf > 0.0 && vis.Unoccluded(scene) {
 		bsdfPdf = isect.Bsdf().Pdf(wi, isect.Wo)
-		weight := lightPdf / (lightPdf + bsdfPdf)
+		weight := powerHeuristic(lightPdf, bsdfPdf)
 		f := isect.Bsdf().Eval(wi, isect.Wo).Scale(math.Abs(isect.Normal.Dot(wi)))
 		L := f.Multiply(Li).Scale(weight / lightPdf)
 		Ld = Ld.Add(L)
@@ -134,7 +134,7 @@ func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Co
 			if lightPdf <= 0.0 {
 				return Ld.Scale(Float(numLights))
 			}
-			weight = bsdfPdf / (bsdfPdf + lightPdf)
+			weight = powerHeuristic(bsdfPdf, lightPdf)
 		}
 
 		var testIsect Intersection
@@ -156,4 +156,8 @@ func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Co
 	}
 
 	return Ld.Scale(Float(numLights))
+}
+
+func powerHeuristic(f, g Float) Float {
+	return (f * f) / ((f * f) + (g * g))
 }

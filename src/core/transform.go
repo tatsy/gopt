@@ -86,6 +86,14 @@ func NewPerspective(fov, aspect, near, far Float) *Transform {
 	return NewScale(s, s, 1.0).Multiply(NewTransform(pers))
 }
 
+// At returns an element of Transform.
+func (t *Transform) At(i, j int) Float {
+	if i < 0 || j < 0 || i >= 4 || j >= 4 {
+		panic("Index out of bounds!")
+	}
+	return t.mat[i][j]
+}
+
 // Multiply computes the multiplications of Transforms.
 func (t1 *Transform) Multiply(t2 *Transform) *Transform {
 	ret := new(Transform)

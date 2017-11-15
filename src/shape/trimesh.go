@@ -33,7 +33,7 @@ func (triMesh *TriMesh) Load(filename string) bool {
 	handler, err := os.OpenFile(filename, os.O_RDONLY, 0600)
 	defer handler.Close()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	// Create buffered reader

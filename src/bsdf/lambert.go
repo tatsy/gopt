@@ -17,7 +17,10 @@ func NewLambertReflection(re *Color) *LambertReflection {
 }
 
 func (f *LambertReflection) Eval(wi, wo *Vector3d) *Color {
-	return f.re.Scale(1.0 / math.Pi)
+	if SameHemisphere(wi, wo) {
+		return f.re.Scale(1.0 / math.Pi)
+	}
+	return NewColor(0.0, 0.0, 0.0)
 }
 
 func (f *LambertReflection) Pdf(wi, wo *Vector3d) Float {
@@ -27,17 +30,13 @@ func (f *LambertReflection) Pdf(wi, wo *Vector3d) Float {
 	return 0.0
 }
 
-func (f *LambertReflection) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float) {
-	phi := 2.0 * math.Pi * u.X
-	r2 := u.Y
-	r := math.Sqrt(r2)
-
-	x := math.Cos(phi) * r
-	y := math.Sin(phi) * r
-	z := math.Sqrt(1.0 - r2)
-	return f.re, NewVector3d(x, y, z), 1.0
+func (f *LambertReflection) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, BsdfType) {
+	wi := SampleCosineHemisphere(u)
+	fr := f.Eval(wi, wo)
+	pdf := f.Pdf(wi, wo)
+	return fr, wi, pdf, (BSDF_DIFFUSE | BSDF_REFLECTION)
 }
 
-func (f *LambertReflection) Type() int {
+func (f *LambertReflection) Type() BsdfType {
 	return BSDF_DIFFUSE | BSDF_REFLECTION
 }

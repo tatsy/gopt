@@ -1,7 +1,9 @@
 package core
 
+type BsdfType int
+
 const (
-	BSDF_DIFFUSE int = 1 << iota
+	BSDF_DIFFUSE BsdfType = 1 << iota
 	BSDF_SPECULAR
 	BSDF_GLOSSY
 	BSDF_REFLECTION
@@ -22,47 +24,34 @@ func NewBsdf(isect *Intersection, bxdf Bxdf) *Bsdf {
 }
 
 func (bsdf *Bsdf) Eval(wi, wo *Vector3d) *Color {
-	var xLocal, yLocal, zLocal Float
-	xLocal = bsdf.ts.Dot(wi)
-	yLocal = bsdf.bs.Dot(wi)
-	zLocal = bsdf.ns.Dot(wi)
-	wiLocal := NewVector3d(xLocal, yLocal, zLocal)
-	xLocal = bsdf.ts.Dot(wo)
-	yLocal = bsdf.bs.Dot(wo)
-	zLocal = bsdf.ns.Dot(wo)
-	woLocal := NewVector3d(xLocal, yLocal, zLocal)
+	wiLocal := bsdf.toLocal(wi)
+	woLocal := bsdf.toLocal(wo)
 	return bsdf.bxdf.Eval(wiLocal, woLocal)
 }
 
 func (bsdf *Bsdf) Pdf(wi, wo *Vector3d) Float {
-	var xLocal, yLocal, zLocal Float
-	xLocal = bsdf.ts.Dot(wi)
-	yLocal = bsdf.bs.Dot(wi)
-	zLocal = bsdf.ns.Dot(wi)
-	wiLocal := NewVector3d(xLocal, yLocal, zLocal)
-	xLocal = bsdf.ts.Dot(wo)
-	yLocal = bsdf.bs.Dot(wo)
-	zLocal = bsdf.ns.Dot(wo)
-	woLocal := NewVector3d(xLocal, yLocal, zLocal)
+	wiLocal := bsdf.toLocal(wi)
+	woLocal := bsdf.toLocal(wo)
 	return bsdf.bxdf.Pdf(wiLocal, woLocal)
 }
 
-func (bsdf *Bsdf) SampleWi(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, int) {
-	xLocal := bsdf.ts.Dot(wo)
-	yLocal := bsdf.bs.Dot(wo)
-	zLocal := bsdf.ns.Dot(wo)
-	woLocal := NewVector3d(xLocal, yLocal, zLocal)
-	f, wiLocal, pdf := bsdf.bxdf.Sample(woLocal, u)
-	bsdfType := bsdf.bxdf.Type()
+func (bsdf *Bsdf) SampleWi(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, BsdfType) {
+	woLocal := bsdf.toLocal(wo)
+	f, wiLocal, pdf, bsdfType := bsdf.bxdf.Sample(woLocal, u)
 	wi := bsdf.ts.Scale(wiLocal.X).
 		Add(bsdf.bs.Scale(wiLocal.Y)).
-		Add(bsdf.ns.Scale(wiLocal.Z))
+		Add(bsdf.ns.Scale(wiLocal.Z)).
+		Normalized()
 	return f, wi, pdf, bsdfType
 }
 
-func (bsdf *Bsdf) IsNotSpecular() bool {
-	if bsdf.bxdf == nil {
-		return false
-	}
-	return (bsdf.bxdf.Type() & BSDF_SPECULAR) == 0
+func (bsdf *Bsdf) toLocal(wWorld *Vector3d) *Vector3d {
+	x := bsdf.ts.Dot(wWorld)
+	y := bsdf.bs.Dot(wWorld)
+	z := bsdf.ns.Dot(wWorld)
+	return NewVector3d(x, y, z).Normalized()
+}
+
+func (bsdf *Bsdf) IsSpecular() bool {
+	return (bsdf.bxdf.Type() & BSDF_SPECULAR) != 0
 }

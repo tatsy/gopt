@@ -1,8 +1,6 @@
 package light
 
 import (
-	"math"
-
 	. "github.com/tatsy/gopt/src/core"
 )
 
@@ -26,8 +24,8 @@ func (l *AreaLight) SampleLi(isect *Intersection, u *Vector2d) (*Color, *Vector3
 	wi := pos.Subtract(isect.Pos).Normalized()
 	pdf := l.shape.Pdf(isect, wi)
 
-	dot := math.Max(0.0, -wi.Dot(normal))
 	Le := l.radiance
+	dot := -wi.Dot(normal)
 	if dot <= 0.0 {
 		Le = NewColor(0.0, 0.0, 0.0)
 	}

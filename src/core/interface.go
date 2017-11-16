@@ -14,8 +14,8 @@ type Shape interface {
 type Bxdf interface {
 	Pdf(wi, wo *Vector3d) Float
 	Eval(wi, wo *Vector3d) *Color
-	Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float)
-	Type() int
+	Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, BsdfType)
+	Type() BsdfType
 }
 
 type Sensor interface {

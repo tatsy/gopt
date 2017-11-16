@@ -95,7 +95,8 @@ func (t *Triangle) Intersect(ray *Ray, tHit *Float, isect *Intersection) bool {
 	pos := ray.Org.Add(ray.Dir.Scale(*tHit))
 	nrm := t.Normals[0].Scale(1.0 - u - v).
 		Add(t.Normals[1].Scale(u)).
-		Add(t.Normals[2].Scale(v))
+		Add(t.Normals[2].Scale(v)).
+		Normalized()
 	//Vector2d uv = (1.0 - u - v) * uvs_[0] + u * uvs_[1] + v * uvs_[2];
 
 	*isect = *NewIntersection(pos, nrm, ray.Dir.Negate())

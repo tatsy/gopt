@@ -50,19 +50,18 @@ func (integrator *PathIntegrator) Li(scene *Scene, r *Ray, sampler Sampler, maxB
 	ray := r.Clone()
 	L := NewColor(0.0, 0.0, 0.0)
 	beta := NewColor(1.0, 1.0, 1.0)
-	specularBounce := false
 
 	for bounces := 0; ; bounces++ {
 		var isect Intersection
 		isIntersect := scene.Intersect(ray, &isect)
-		if bounces == 0 || specularBounce {
+		if bounces == 0 {
 			if isIntersect {
-				rr := beta.Multiply(isect.Le(ray.Dir.Negate()))
-				L = L.Add(rr)
+				Ld := isect.Le(ray.Dir.Negate())
+				L = L.Add(beta.Multiply(Ld))
 			} else {
 				for _, l := range scene.Lights {
-					rr := beta.Multiply(l.LeWithRay(ray))
-					L = L.Add(rr)
+					Ld := l.LeWithRay(ray)
+					L = L.Add(beta.Multiply(Ld))
 				}
 			}
 		}
@@ -71,25 +70,22 @@ func (integrator *PathIntegrator) Li(scene *Scene, r *Ray, sampler Sampler, maxB
 			break
 		}
 
-		if isect.Bsdf().IsNotSpecular() {
-			Ld := NextEventEstimation(&isect, scene, sampler)
-			L = L.Add(beta.Multiply(Ld))
-		}
+		Ld := NextEventEstimation(&isect, scene, sampler)
+		L = L.Add(beta.Multiply(Ld))
 
 		wo := ray.Dir.Negate()
-		f, wi, pdf, bsdfType := isect.Bsdf().SampleWi(wo, sampler.Get2D())
+		f, wi, pdf, _ := isect.Bsdf().SampleWi(wo, sampler.Get2D())
 
 		if f.IsBlack() || pdf == 0.0 {
 			break
 		}
 
 		beta = beta.Multiply(f).Scale(math.Abs(wi.Dot(isect.Normal)) / pdf)
-		specularBounce = (bsdfType & BSDF_SPECULAR) != 0
 		ray = isect.SpawnRay(wi)
 
 		// Russian roulette
 		if bounces > 3 {
-			continueProbability := math.Min(0.95, beta.Y())
+			continueProbability := math.Min(0.95, beta.MaxComponent())
 			if sampler.Get1D() > continueProbability {
 				break
 			}
@@ -105,8 +101,8 @@ func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Co
 		return NewColor(0.0, 0.0, 0.0)
 	}
 
+	var lightPdf, bsdfPdf Float
 	Ld := NewColor(0.0, 0.0, 0.0)
-	lightPdf, bsdfPdf := 0.0, 0.0
 
 	// Light sampling
 	numLights := len(scene.Lights)
@@ -123,36 +119,33 @@ func NextEventEstimation(isect *Intersection, scene *Scene, sampler Sampler) *Co
 	}
 
 	// BSDF sampling
-	lightPdf, bsdfPdf = 0.0, 0.0
-	f, wi, bsdfPdf, sampledType := isect.Bsdf().SampleWi(isect.Wo, sampler.Get2D())
+	f, wi, bsdfPdf, bsdfType := isect.Bsdf().SampleWi(isect.Wo, sampler.Get2D())
 	if !f.IsBlack() && bsdfPdf > 0.0 {
-		sampledSpecular := (sampledType & BSDF_SPECULAR) != 0
 		f = f.Scale(math.Abs(isect.Normal.Dot(wi)))
-		weight := 1.0
-		if !sampledSpecular {
-			lightPdf = light.PdfLi(isect, wi)
-			if lightPdf <= 0.0 {
-				return Ld.Scale(Float(numLights))
-			}
-			weight = powerHeuristic(bsdfPdf, lightPdf)
-		}
 
-		var testIsect Intersection
-		ray := NewRay(isect.Pos, wi)
-		isIntersect := scene.Intersect(ray, &testIsect)
-		Li := NewColor(0.0, 0.0, 0.0)
+		var lightIsect Intersection
+		ray := isect.SpawnRay(wi)
+		isIntersect := scene.Intersect(ray, &lightIsect)
+
+		Li = NewColor(0.0, 0.0, 0.0)
 		if isIntersect {
-			rr := testIsect.Le(ray.Dir.Negate())
-			Li = Li.Add(rr)
-		} else {
-			for _, l := range scene.Lights {
-				rr := l.LeWithRay(ray)
-				Li = Li.Add(rr)
+			if lightIsect.IsHitLight(light) {
+				Li = lightIsect.Le(ray.Dir.Negate())
 			}
+		} else {
+			Li = light.LeWithRay(ray)
 		}
 
-		L := f.Multiply(Li).Scale(weight / bsdfPdf)
-		Ld = Ld.Add(L)
+		if !Li.IsBlack() {
+			lightPdf = light.PdfLi(isect, wi)
+			weight := 1.0
+			sampleSpecular := (bsdfType & BSDF_SPECULAR) != 0
+			if sampleSpecular {
+				weight = powerHeuristic(bsdfPdf, lightPdf)
+			}
+			L := f.Multiply(Li).Scale(weight / bsdfPdf)
+			Ld = Ld.Add(L)
+		}
 	}
 
 	return Ld.Scale(Float(numLights))

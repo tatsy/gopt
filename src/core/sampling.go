@@ -15,6 +15,12 @@ func CoordinateSystem(w *Vector3d) (*Vector3d, *Vector3d) {
 	return u, v
 }
 
+func SampleCosineHemisphere(u *Vector2d) *Vector3d {
+	xy := SampleConcentricDisk(u)
+	z := math.Sqrt(math.Max(0.0, (1.0 - (xy.X * xy.X) - (xy.Y * xy.Y))))
+	return NewVector3d(xy.X, xy.Y, z)
+}
+
 func SampleConcentricDisk(u *Vector2d) *Vector2d {
 	uOffset := u.Scale(2.0).Subtract(NewVector2d(1.0, 1.0))
 	if uOffset.X == 0.0 && uOffset.Y == 0.0 {

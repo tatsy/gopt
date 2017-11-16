@@ -1,7 +1,5 @@
 package core
 
-import "math"
-
 type Intersection struct {
 	Pos, Normal, Wo *Vector3d
 	primitive       *Primitive
@@ -17,17 +15,36 @@ func NewIntersection(pos, normal, wo *Vector3d) *Intersection {
 }
 
 func (isect *Intersection) SpawnRay(wi *Vector3d) *Ray {
-	return NewRay(isect.Pos, wi)
+	org := offsetRayOrigin(isect.Pos, isect.Normal, wi)
+	return NewRay(org, wi)
 }
 
 func (isect *Intersection) Bsdf() *Bsdf {
 	return NewBsdf(isect, isect.primitive.Bxdf())
 }
 
+func (isect *Intersection) IsHitLight(l Light) bool {
+	if isect.primitive.Light() == nil {
+		return false
+	}
+	return l == isect.primitive.Light()
+}
+
 func (isect *Intersection) Le(wi *Vector3d) *Color {
 	if isect.primitive.Light() == nil {
 		return NewColor(0.0, 0.0, 0.0)
 	}
-	dot := math.Max(0.0, wi.Dot(isect.Normal))
-	return isect.primitive.Light().Le().Scale(dot)
+	dot := wi.Dot(isect.Normal)
+	if dot <= 0.0 {
+		return NewColor(0.0, 0.0, 0.0)
+	}
+	return isect.primitive.Light().Le()
+}
+
+func offsetRayOrigin(org, n, w *Vector3d) *Vector3d {
+	offset := n.Scale(1.0e-3)
+	if w.Dot(n) < 0.0 {
+		offset = offset.Negate()
+	}
+	return org.Add(offset)
 }

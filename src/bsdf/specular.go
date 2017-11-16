@@ -1,6 +1,8 @@
 package bsdf
 
 import (
+	"math"
+
 	. "github.com/tatsy/gopt/src/core"
 )
 
@@ -16,26 +18,30 @@ func NewSpecularReflection(re *Color) *SpecularReflection {
 }
 
 func (f *SpecularReflection) Eval(wi, wo *Vector3d) *Color {
-	if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= 1.0-deltaEps {
-		return f.re.Scale(1.0 / AbsCosTheta(wi))
+	if SameHemisphere(wi, wo) {
+		if math.Abs(NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo)-1.0) < deltaEps {
+			return f.re.Scale(1.0 / AbsCosTheta(wi))
+		}
 	}
 	return NewColor(0.0, 0.0, 0.0)
 }
 
 func (f *SpecularReflection) Pdf(wi, wo *Vector3d) Float {
-	if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= 1.0-deltaEps {
-		return Infinity
+	if SameHemisphere(wi, wo) {
+		if math.Abs(NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo)-1.0) < deltaEps {
+			return 1.0
+		}
 	}
 	return 0.0
 }
 
-func (f *SpecularReflection) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float) {
+func (f *SpecularReflection) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, BsdfType) {
 	wi := NewVector3d(-wo.X, -wo.Y, wo.Z)
 	fr := f.re.Scale(1.0 / AbsCosTheta(wi))
-	return fr, wi, 1.0
+	return fr, wi, 1.0, (BSDF_SPECULAR | BSDF_REFLECTION)
 }
 
-func (f *SpecularReflection) Type() int {
+func (f *SpecularReflection) Type() BsdfType {
 	return BSDF_SPECULAR | BSDF_REFLECTION
 }
 
@@ -58,7 +64,7 @@ func (f *SpecularFresnel) Eval(wi, wo *Vector3d) *Color {
 	cosThetaI := CosTheta(wo)
 	F := FresnelDielectric(cosThetaI, f.etaA, f.etaB)
 	if SameHemisphere(wi, wo) {
-		if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= 1.0-deltaEps {
+		if math.Abs(NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo)-1.0) < deltaEps {
 			return f.re.Scale(F / AbsCosTheta(wi))
 		}
 	} else {
@@ -74,7 +80,7 @@ func (f *SpecularFresnel) Eval(wi, wo *Vector3d) *Color {
 		}
 
 		wt, isRefr := Refract(wo, faceForwardNormal, etaI/etaT)
-		if isRefr && wt.Dot(wi) > 1.0-deltaEps {
+		if isRefr && (math.Abs(wt.Dot(wi)-1.0) < deltaEps) {
 			return f.tr.Scale((1.0 - F) / AbsCosTheta(wi))
 		}
 	}
@@ -85,7 +91,7 @@ func (f *SpecularFresnel) Pdf(wi, wo *Vector3d) Float {
 	cosThetaI := CosTheta(wo)
 	F := FresnelDielectric(cosThetaI, f.etaA, f.etaB)
 	if SameHemisphere(wi, wo) {
-		if NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo) >= (1.0 - deltaEps) {
+		if math.Abs(NewVector3d(-wi.X, -wi.Y, wi.Z).Dot(wo)-1.0) < deltaEps {
 			return F
 		}
 	} else {
@@ -101,21 +107,21 @@ func (f *SpecularFresnel) Pdf(wi, wo *Vector3d) Float {
 		}
 
 		wt, isRefract := Refract(wo, faceForwardNormal, etaI/etaT)
-		if isRefract && (wt.Dot(wi) >= (1.0 - deltaEps)) {
+		if isRefract && (math.Abs(wt.Dot(wi)-1.0) < deltaEps) {
 			return 1.0 - F
 		}
 	}
 	return 0.0
 }
 
-func (f *SpecularFresnel) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float) {
+func (f *SpecularFresnel) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, Float, BsdfType) {
 	F := FresnelDielectric(CosTheta(wo), f.etaA, f.etaB)
 	if u.X < F {
 		// Reflection
 		wi := NewVector3d(-wo.X, -wo.Y, wo.Z)
 		pdf := F
 		fr := f.re.Scale(F / AbsCosTheta(wi))
-		return fr, wi, pdf
+		return fr, wi, pdf, (BSDF_SPECULAR | BSDF_REFLECTION)
 	} else {
 		// Transmission
 		entering := CosTheta(wo) > 0.0
@@ -132,13 +138,13 @@ func (f *SpecularFresnel) Sample(wo *Vector3d, u *Vector2d) (*Color, *Vector3d, 
 		wi, isRefract := Refract(wo, faceForwardNormal, etaI/etaT)
 		if isRefract {
 			pdf := 1.0 - F
-			ft := f.tr.Scale((1.0 - F) * (etaI * etaI) / (etaT * etaT) / AbsCosTheta(wi))
-			return ft, wi, pdf
+			ft := f.tr.Scale((1.0 - F) * ((etaI * etaI) / (etaT * etaT)) / AbsCosTheta(wi))
+			return ft, wi, pdf, (BSDF_SPECULAR | BSDF_TRANSMISSION)
 		}
 	}
-	return NewColor(0.0, 0.0, 0.0), NewVector3d(0.0, 0.0, 1.0), 0.0
+	return NewColor(0.0, 0.0, 0.0), NewVector3d(0.0, 0.0, 1.0), 0.0, 0
 }
 
-func (f *SpecularFresnel) Type() int {
+func (f *SpecularFresnel) Type() BsdfType {
 	return BSDF_SPECULAR | BSDF_REFLECTION | BSDF_TRANSMISSION
 }

@@ -41,7 +41,7 @@ func (triMesh *TriMesh) Load(filename string) bool {
 
 	// Default material
 	var defaultMat, currentMat Bxdf
-	defaultMat = NewLambertReflection(NewColor(0.5, 0.5, 0.5))
+	defaultMat = NewLambertReflection(NewColor(0.0, 0.0, 0.0))
 	currentMat = defaultMat
 	materials := make(map[string]Bxdf)
 

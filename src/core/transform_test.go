@@ -17,7 +17,7 @@ func TestTransformAt(t *testing.T) {
 		for j := 0; j < 4; j++ {
 			expected := i*4 + j + 1
 			if m.At(i, j) != Float(expected) {
-				t.Errorf("m.At(%d, %d) != %f, detected %d", i, j, expected, m.At(i, j))
+				t.Errorf("m.At(%d, %d) != %d, detected %f", i, j, expected, m.At(i, j))
 			}
 		}
 	}
